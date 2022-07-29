@@ -1,0 +1,17 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:entry title="${%ScanName}" field="scanName">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%TestEnvironment}" field="testEnvironment">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%ClientToken}" field="clientToken">
+        <f:textbox />
+    </f:entry>
+    <f:advanced>
+        <f:entry title="${%TraceableServer}" field="traceableServer">
+            <f:textbox />
+        </f:entry>
+    </f:advanced>
+</j:jelly>
