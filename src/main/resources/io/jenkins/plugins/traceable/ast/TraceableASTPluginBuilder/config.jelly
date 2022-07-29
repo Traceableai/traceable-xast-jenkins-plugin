@@ -1,16 +1,25 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry title="${%ScanName}" field="scanName">
+    <f:entry title="${%ScanName}" field="scanName" help="/plugin/Traceable-AST/field-help/ScanName.html">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%TestEnvironment}" field="testEnvironment">
+    <f:entry title="${%TestEnvironment} *" field="testEnvironment" help="/plugin/Traceable-AST/field-help/TestEnvironment.html">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%ClientToken}" field="clientToken">
+    <f:entry title="${%ClientToken} *" field="clientToken" help="/plugin/Traceable-AST/field-help/ClientToken.html">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%TraceableCliBinaryLocation}" field="traceableCliBinaryLocation" help="/plugin/Traceable-AST/field-help/TraceableLCli.html">
         <f:textbox />
     </f:entry>
     <f:advanced>
-        <f:entry title="${%TraceableServer}" field="traceableServer">
+        <f:entry title="${%TraceableServer}" field="traceableServer" help="/plugin/Traceable-AST/field-help/TraceableServer.html">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%IdleTimeout} (in minutes)" field="idleTimeout" help="/plugin/Traceable-AST/field-help/IdleTimeout.html">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout" help="/plugin/Traceable-AST/field-help/ScanTimeout.html">
             <f:textbox />
         </f:entry>
     </f:advanced>
