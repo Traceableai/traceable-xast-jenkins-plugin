@@ -102,6 +102,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        if(scanId != null)
         run.addAction(new AbortScanAction(scanId, listener));
         run.addAction(new GenerateReportAction());
     }
