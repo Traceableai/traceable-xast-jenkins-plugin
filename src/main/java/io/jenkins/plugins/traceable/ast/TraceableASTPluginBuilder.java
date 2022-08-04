@@ -21,6 +21,8 @@ import java.io.IOException;
 
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -36,8 +38,9 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
 
     private String traceableCliBinaryLocation;
     private String traceableServer;
-    private Integer idleTimeout = new Integer(1440);
-    private Integer scanTimeout = new Integer(1440);
+    private String idleTimeout;
+    private String scanTimeout;
+    private String scanId;
 
 
     public String getScanName() { return scanName; }
@@ -46,8 +49,8 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
 
     public String getTraceableCliBinaryLocation() { return traceableCliBinaryLocation; }
     public String getTraceableServer() { return traceableServer; }
-    public Integer getIdleTimeout() { return idleTimeout; }
-    public Integer getScanTimeout() { return scanTimeout; }
+    public String getIdleTimeout() { return idleTimeout; }
+    public String getScanTimeout() { return scanTimeout; }
 
     @DataBoundConstructor
     public TraceableASTPluginBuilder(){}
@@ -70,27 +73,27 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void setTraceableServer(String traceableServer) { this.traceableServer = traceableServer; }
 
     @DataBoundSetter
-    public void setIdleTimeout(Integer idleTimeout) {
-        if ( idleTimeout != null )
+    public void setIdleTimeout(String idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
 
     @DataBoundSetter
-    public void setScanTimeout(Integer  scanTimeout) {
-        if ( scanTimeout != null )
+    public void setScanTimeout(String  scanTimeout) {
         this.scanTimeout = scanTimeout;
     }
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         try {
-            ProcessBuilder pb = new ProcessBuilder("src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/run_ast_scan.sh",
+            ProcessBuilder pb = new ProcessBuilder(
+                    "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/run_ast_scan.sh",
                     scanName,
                     testEnvironment,
                     clientToken,
                     traceableServer,
-                    idleTimeout.toString(),
-                    scanTimeout.toString());
+                    idleTimeout,
+                    scanTimeout
+            );
             Process runAstScan = pb.start();
             logOutput(runAstScan.getInputStream(), "",listener);
             logOutput(runAstScan.getErrorStream(), "Error: ",listener);
@@ -99,14 +102,24 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        run.addAction(new AbortScanAction(scanId, listener));
         run.addAction(new GenerateReportAction());
     }
+
     private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
         new Thread(() -> {
             Scanner scanner = new Scanner(inputStream, "UTF-8");
             while (scanner.hasNextLine()) {
                 synchronized (this) {
-                    listener.getLogger().println(prefix + scanner.nextLine());
+                    String line = scanner.nextLine();
+
+                    // Extract the scan ID from the cli output of scan init command.
+                    if(prefix == "" && line.contains("Running scan with ID")) {
+                        String[] tokens = line.split(" ");
+                        scanId = tokens[ tokens.length -1 ];
+                    }
+
+                    listener.getLogger().println(prefix + line);
                 }
             }
             scanner.close();
@@ -117,9 +130,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private String PLUGIN_NAME = "Traceable AST";
-        public FormValidation doCheckName( @QueryParameter String scanName, @QueryParameter String testEnvironment,
-                                           @QueryParameter String clientToken, @QueryParameter String traceableServer,
-                                           @QueryParameter String maxTimeout)
+        public FormValidation doCheckName( @QueryParameter String scanName, @QueryParameter String testEnvironment )
 
                 throws IOException, ServletException {
 
