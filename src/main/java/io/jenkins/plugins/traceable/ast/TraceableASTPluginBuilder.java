@@ -118,11 +118,10 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
                     String line = scanner.nextLine();
 
                     // Extract the scan ID from the cli output of scan init command.
-                    if(prefix == "" && line.contains("Running scan with ID")) {
+                    if(prefix.equals("") && line.contains("Running scan with ID")) {
                         String[] tokens = line.split(" ");
                         scanId = tokens[ tokens.length -1 ];
                     }
-
                     listener.getLogger().println(prefix + line);
                 }
             }

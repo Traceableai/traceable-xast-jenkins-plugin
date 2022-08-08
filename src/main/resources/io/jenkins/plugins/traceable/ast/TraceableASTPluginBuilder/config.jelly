@@ -6,8 +6,8 @@
     <f:entry title="${%TestEnvironment} *" field="testEnvironment">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%ClientToken} *" field="clientToken">
-        <f:textbox />
+    <f:entry title="${%ClientToken} *"  >
+        <f:password field="clientToken" />
     </f:entry>
     <f:entry title="${%TraceableCliBinaryLocation}" field="traceableCliBinaryLocation">
         <f:textbox />

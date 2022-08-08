@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class AbortScanAction implements RunAction2 {
     private String scanId;
     private TaskListener listener;
-    private transient Run run;
 
     // Constructor
     public  AbortScanAction(String scanId, TaskListener listener) {
@@ -21,7 +20,7 @@ public class AbortScanAction implements RunAction2 {
 
     @Override
     public void onAttached(Run<?, ?> r) {
-        this.run = r;
+
         try {
         ProcessBuilder pb = new ProcessBuilder(
                 "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/stop_ast_scan.sh",
@@ -37,9 +36,7 @@ public class AbortScanAction implements RunAction2 {
     }
 
     @Override
-    public void onLoad(Run<?, ?> r) {
-        this.run = r;
-    }
+    public void onLoad(Run<?, ?> r) {}
 
     @Override
     public String getIconFileName() {
