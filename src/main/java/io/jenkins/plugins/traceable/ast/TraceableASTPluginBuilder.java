@@ -51,6 +51,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public String getTraceableServer() { return traceableServer; }
     public String getIdleTimeout() { return idleTimeout; }
     public String getScanTimeout() { return scanTimeout; }
+    public String getScanId() { return scanId; }
 
     @DataBoundConstructor
     public TraceableASTPluginBuilder(){}
@@ -92,7 +93,9 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
                     clientToken,
                     traceableServer,
                     idleTimeout,
-                    scanTimeout
+                    scanTimeout,
+                    run.getId(),
+                    run.getUrl()
             );
             Process runAstScan = pb.start();
             logOutput(runAstScan.getInputStream(), "",listener);
@@ -104,7 +107,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         }
         if(scanId != null)
         run.addAction(new AbortScanAction(scanId, listener));
-        run.addAction(new GenerateReportAction());
+        run.addAction(new GenerateReportAction(scanId));
     }
 
     private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
