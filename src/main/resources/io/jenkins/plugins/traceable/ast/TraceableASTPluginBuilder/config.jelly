@@ -13,6 +13,18 @@
         <f:textbox />
     </f:entry>
     <f:advanced>
+        <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%ExcludeUrlRegex}" field="excludeUrlRegex">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%TargetUrl}" field="targetUrl">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%PluginsToInclude}" field="pluginsToInclude">
+            <f:d/>
+        </f:entry>
         <f:entry title="${%TraceableServer}" field="traceableServer">
             <f:textbox />
         </f:entry>

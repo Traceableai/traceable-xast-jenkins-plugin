@@ -35,8 +35,11 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     private String scanName;
     private String testEnvironment;
     private String clientToken;
-
     private String traceableCliBinaryLocation;
+    private String includeUrlRegex;
+    private String excludeUrlRegex;
+    private String targetUrl;
+    private String pluginsToInclude;
     private String traceableServer;
     private String idleTimeout;
     private String scanTimeout;
@@ -46,8 +49,11 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public String getScanName() { return scanName; }
     public String getTestEnvironment() { return testEnvironment; }
     public String getClientToken() { return clientToken; }
-
     public String getTraceableCliBinaryLocation() { return traceableCliBinaryLocation; }
+    public String getIncludeUrlRegex() { return includeUrlRegex; }
+    public String getExcludeUrlRegex() { return excludeUrlRegex; }
+    public String getTargetUrl() { return targetUrl; }
+    public String getPluginsToInclude() { return pluginsToInclude; }
     public String getTraceableServer() { return traceableServer; }
     public String getIdleTimeout() { return idleTimeout; }
     public String getScanTimeout() { return scanTimeout; }
@@ -57,9 +63,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public TraceableASTPluginBuilder(){}
 
     @DataBoundSetter
-    public void setScanName(String scanName) {
-        this.scanName = scanName;
-    }
+    public void setScanName(String scanName) { this.scanName = scanName; }
 
     @DataBoundSetter
     public void setTestEnvironment(String testEnvironment) { this.testEnvironment = testEnvironment; }
@@ -71,17 +75,25 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void setTraceableCliBinaryLocation(String traceableCliBinaryLocation ) { this.traceableCliBinaryLocation = traceableCliBinaryLocation; }
 
     @DataBoundSetter
+    public void setIncludeUrlRegex(String includeUrlRegex) { this.includeUrlRegex = includeUrlRegex; }
+
+    @DataBoundSetter
+    public void setExcludeUrlRegex(String excludeUrlRegex) { this.excludeUrlRegex = excludeUrlRegex; }
+
+    @DataBoundSetter
+    public void setTargetUrl(String targetUrl) { this.targetUrl = targetUrl; }
+
+    @DataBoundSetter
+    public void setPluginsToInclude(String pluginsToInclude) { this.pluginsToInclude = pluginsToInclude; }
+
+    @DataBoundSetter
     public void setTraceableServer(String traceableServer) { this.traceableServer = traceableServer; }
 
     @DataBoundSetter
-    public void setIdleTimeout(String idleTimeout) {
-        this.idleTimeout = idleTimeout;
-    }
+    public void setIdleTimeout(String idleTimeout) { this.idleTimeout = idleTimeout; }
 
     @DataBoundSetter
-    public void setScanTimeout(String  scanTimeout) {
-        this.scanTimeout = scanTimeout;
-    }
+    public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
@@ -91,6 +103,10 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
                     scanName,
                     testEnvironment,
                     clientToken,
+                    includeUrlRegex,
+                    excludeUrlRegex,
+                    targetUrl,
+                    pluginsToInclude,
                     traceableServer,
                     idleTimeout,
                     scanTimeout,
@@ -105,9 +121,10 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        if(scanId != null)
-        run.addAction(new AbortScanAction(scanId, listener));
-        run.addAction(new GenerateReportAction(scanId));
+        if (scanId != null) {
+            run.addAction(new AbortScanAction(scanId, listener));
+            run.addAction(new GenerateReportAction(scanId));
+        }
     }
 
     private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
