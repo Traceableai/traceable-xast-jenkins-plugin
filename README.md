@@ -52,6 +52,7 @@ To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and l
     
 </ol>
 Client Token and Traffic environment are required fields and Client Token is the same as the scan token we generated.
+<p></p>
 <img src="src/main/webapp/img/Readme_add_configuration.png"/>
 
 ## 4. View Traceable AST Report
@@ -62,9 +63,61 @@ Client Token and Traffic environment are required fields and Client Token is the
 <li>the report of the scan will be available as the Traceable AST report tab.</li>
 </ol>
 The scan report shows the number of vulnerabilities found for each type of plugin category.
-
+<p></p>
 <img src="src/main/webapp/img/Readme_report.png"/>
 
+<h6>List of Available Configuration Options:</h6>
+
+<table>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><span style="color:Orange">Scan Name</span> (optional)</td>
+<td>The name of the scan used to identify the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Test Environment</span> (Required)</td>
+<td>The environment from which we should analyze the traffic and generate tests. In most of the cases this will be the environment where functional test traffic is coming</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Client Token</span> (Required)</td>
+<td>Client Token/Scan Token is the token you get from the traceable API testing section while generating a new scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Traceable CLI Binary Location</span> (optional)</td>
+<td>Provide the location of the Traceble AST cli binary, else the latest version will be downloaded from Traceable Artifactory</td>
+</tr>
+<tr>
+<td ><span style="color:Orange">Plugins</span> (optional)</td>
+<td>List  of comma seperated identified vulnerabilities, for which you want to test in your scan. (Refer to help in plugins field for the list of available plugins)</td>
+</tr>
+<tr>
+<td ><span style="color:Orange">Include Url Regex</span> (optional)</td>
+<td>Include the URLs which matches the regular expression in the scan</td>
+</tr>
+<tr>
+<td ><span style="color:Orange">Exclude Url Regex</span> (optional)</td>
+<td>Excludes the URLs matching this regular expression in the scan</td>
+</tr>
+<tr>
+<td ><span style="color:Orange">Target Url</span> (optional)</td>
+<td>Specific url for which you want to run the scan</td>
+</tr>
+<tr>
+<td ><span style="color:Orange">Traceable Server</span> (optional)</td>
+<td>Specify the Traceable's server you want to use for the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Idle Timeout</span> (optional)</td>
+<td>Continuous duration in which if no test suite is received scan is marked completed and stopped</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Scan Timeout</span> (optional)</td>
+<td>Maximum time a scan is executed,scan is stopped after scan timeout</td>
+</tr>
+</table>
 
 
 
