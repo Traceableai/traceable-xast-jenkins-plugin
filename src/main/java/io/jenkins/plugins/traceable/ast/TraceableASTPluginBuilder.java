@@ -10,36 +10,26 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-
-import jnr.ffi.annotations.In;
-import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
 import javax.servlet.ServletException;
 import java.io.IOException;
-
 import java.io.InputStream;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import static io.jenkins.cli.shaded.com.sun.activation.registries.LogSupport.log;
 
 public class TraceableASTPluginBuilder extends Builder implements SimpleBuildStep {
 
     private String scanName;
     private String testEnvironment;
     private String clientToken;
+    private String pluginsToInclude;
     private String traceableCliBinaryLocation;
     private String includeUrlRegex;
     private String excludeUrlRegex;
     private String targetUrl;
-    private String pluginsToInclude;
     private String traceableServer;
     private String idleTimeout;
     private String scanTimeout;
@@ -50,17 +40,22 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public String getTestEnvironment() { return testEnvironment; }
     public String getClientToken() { return clientToken; }
     public String getTraceableCliBinaryLocation() { return traceableCliBinaryLocation; }
+    public String getPluginsToInclude() { return pluginsToInclude; }
     public String getIncludeUrlRegex() { return includeUrlRegex; }
     public String getExcludeUrlRegex() { return excludeUrlRegex; }
     public String getTargetUrl() { return targetUrl; }
-    public String getPluginsToInclude() { return pluginsToInclude; }
     public String getTraceableServer() { return traceableServer; }
     public String getIdleTimeout() { return idleTimeout; }
     public String getScanTimeout() { return scanTimeout; }
     public String getScanId() { return scanId; }
 
+
     @DataBoundConstructor
-    public TraceableASTPluginBuilder(){}
+    public TraceableASTPluginBuilder(){
+        this.pluginsToInclude = "unauthenticated_access,bola,parameter_tampering,mass_assignment,os_command_injection,java_log4shell," +
+                "sqli_blind,self_signed_certificate,tls_not_implemented,weak_ciphers,logjam,lucky13,beast,certificate_name_mismatch," +
+                "revoked_certificate,crime,sweet32,expired_certificate,drown,broken_certificate_chain,poodle,ssrf_blind";
+    }
 
     @DataBoundSetter
     public void setScanName(String scanName) { this.scanName = scanName; }
@@ -75,6 +70,11 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void setTraceableCliBinaryLocation(String traceableCliBinaryLocation ) { this.traceableCliBinaryLocation = traceableCliBinaryLocation; }
 
     @DataBoundSetter
+    public void setPluginsToInclude(String pluginsToInclude) {
+        if(!(pluginsToInclude==null || pluginsToInclude.equals(""))) { this.pluginsToInclude = pluginsToInclude; }
+    }
+
+    @DataBoundSetter
     public void setIncludeUrlRegex(String includeUrlRegex) { this.includeUrlRegex = includeUrlRegex; }
 
     @DataBoundSetter
@@ -82,9 +82,6 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
 
     @DataBoundSetter
     public void setTargetUrl(String targetUrl) { this.targetUrl = targetUrl; }
-
-    @DataBoundSetter
-    public void setPluginsToInclude(String pluginsToInclude) { this.pluginsToInclude = pluginsToInclude; }
 
     @DataBoundSetter
     public void setTraceableServer(String traceableServer) { this.traceableServer = traceableServer; }
@@ -95,18 +92,20 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     @DataBoundSetter
     public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
 
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/run_ast_scan.sh",
                     scanName,
                     testEnvironment,
                     clientToken,
+                    pluginsToInclude,
                     includeUrlRegex,
                     excludeUrlRegex,
                     targetUrl,
-                    pluginsToInclude,
                     traceableServer,
                     idleTimeout,
                     scanTimeout,
@@ -150,12 +149,6 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private String PLUGIN_NAME = "Traceable AST";
-        public FormValidation doCheckName( @QueryParameter String scanName, @QueryParameter String testEnvironment )
-
-                throws IOException, ServletException {
-
-            return FormValidation.ok();
-        }
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {

@@ -1,5 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
     <f:entry title="${%ScanName}" field="scanName">
         <f:textbox />
     </f:entry>
@@ -12,6 +13,9 @@
     <f:entry title="${%TraceableCliBinaryLocation}" field="traceableCliBinaryLocation">
         <f:textbox />
     </f:entry>
+    <f:entry title="${%PluginsToInclude} (comma seperated)" field="pluginsToInclude" help="/plugin/traceable-ast/field-help/Plugins.html" >
+        <f:textbox  value="${it.pluginsToInclude}" />
+    </f:entry>
     <f:advanced>
         <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">
             <f:textbox/>
@@ -21,9 +25,6 @@
         </f:entry>
         <f:entry title="${%TargetUrl}" field="targetUrl">
             <f:textbox/>
-        </f:entry>
-        <f:entry title="${%PluginsToInclude}" field="pluginsToInclude">
-            <f:d/>
         </f:entry>
         <f:entry title="${%TraceableServer}" field="traceableServer">
             <f:textbox />
