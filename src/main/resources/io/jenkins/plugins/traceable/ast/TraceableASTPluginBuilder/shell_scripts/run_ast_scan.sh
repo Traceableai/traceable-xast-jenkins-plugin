@@ -1,13 +1,13 @@
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
-traceableCliBinaryLocation=/Users/dhruvsinghal/IdeaProjects/active-security-testing/ast-cli/dist/traceable/bin/traceable
+traceableCliBinaryLocation=$1
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
 optionsArr=('-n' '-t' '--token' '--plugins' '-i' '-e' '-u' '--traceable-server' '--idle-timeout' '--scan-timeout' '-bi' '-bu')
 stringArr=('-i' '-e' )
-stringSensitive
+
 echo $scanInitCmd
 iterator=0
-for option in "$@"
+for option in "${@:2}"
 do
   if [ -z "$option" ]
   then

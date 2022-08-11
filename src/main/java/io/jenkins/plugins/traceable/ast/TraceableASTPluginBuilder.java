@@ -55,6 +55,8 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         this.pluginsToInclude = "unauthenticated_access,bola,parameter_tampering,mass_assignment,os_command_injection,java_log4shell," +
                 "sqli_blind,self_signed_certificate,tls_not_implemented,weak_ciphers,logjam,lucky13,beast,certificate_name_mismatch," +
                 "revoked_certificate,crime,sweet32,expired_certificate,drown,broken_certificate_chain,poodle,ssrf_blind";
+        downloadTraceableCliBinary();
+        this.traceableCliBinaryLocation = "/Users/dhruvsinghal/IdeaProjects/active-security-testing/ast-cli/dist/traceable/bin/traceable";
     }
 
     @DataBoundSetter
@@ -67,7 +69,10 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void setClientToken(String clientToken) { this.clientToken = clientToken; }
 
     @DataBoundSetter
-    public void setTraceableCliBinaryLocation(String traceableCliBinaryLocation ) { this.traceableCliBinaryLocation = traceableCliBinaryLocation; }
+    public void setTraceableCliBinaryLocation(String traceableCliBinaryLocation ) {
+        if(!(traceableCliBinaryLocation==null || traceableCliBinaryLocation.equals("")))
+        this.traceableCliBinaryLocation = traceableCliBinaryLocation;
+    }
 
     @DataBoundSetter
     public void setPluginsToInclude(String pluginsToInclude) {
@@ -93,12 +98,26 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
 
 
+    private void downloadTraceableCliBinary() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/download_traceable_cli_binary.sh",
+                    traceableCliBinaryLocation
+            );
+            Process runAstScan = pb.start();
+            runAstScan.waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/run_ast_scan.sh",
+                    traceableCliBinaryLocation,
                     scanName,
                     testEnvironment,
                     clientToken,

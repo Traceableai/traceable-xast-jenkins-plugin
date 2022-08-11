@@ -11,7 +11,7 @@
         <f:password field="clientToken" />
     </f:entry>
     <f:entry title="${%TraceableCliBinaryLocation}" field="traceableCliBinaryLocation">
-        <f:textbox />
+        <f:textbox value="${it.traceableCliBinaryLocation}"/>
     </f:entry>
     <f:entry title="${%PluginsToInclude} (comma seperated)" field="pluginsToInclude" help="/plugin/traceable-ast/field-help/Plugins.html" >
         <f:textbox  value="${it.pluginsToInclude}" />

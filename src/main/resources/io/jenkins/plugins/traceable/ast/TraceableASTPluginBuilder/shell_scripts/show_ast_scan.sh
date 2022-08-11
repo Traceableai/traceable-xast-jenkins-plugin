@@ -1,5 +1,5 @@
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
-traceableCliBinaryLocation=/Users/dhruvsinghal/IdeaProjects/active-security-testing/ast-cli/dist/traceable/bin/traceable
-$traceableCliBinaryLocation ast scan show --id $1
-echo "stopping scan: $1"
+traceableCliBinaryLocation=$1
+$traceableCliBinaryLocation ast scan show --id $2
+echo "stopping scan: $2"
