@@ -1,11 +1,12 @@
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
+
 traceableCliBinaryLocation=$1
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
 optionsArr=('-n' '-t' '--token' '--plugins' '-i' '-e' '-u' '--traceable-server' '--idle-timeout' '--scan-timeout' '-bi' '-bu')
 stringArr=('-i' '-e' )
 
-
+#Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
 for option in "${@:2}"
 do
@@ -30,5 +31,6 @@ do
   fi
   iterator=$(($iterator+1))
 done
-echo $scanInitCmd
+
+# Run the command
 $scanInitCmd

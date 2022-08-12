@@ -95,15 +95,20 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+
         if (traceableCliBinaryLocation == null || traceableCliBinaryLocation.equals("")) {
           downloadTraceableCliBinary();
         }
         runAndInitScan(listener,run);
         if (scanId != null) {
             abortScan(listener);
+
+            //Action to generate the report for the output of the scan.
             run.addAction(new GenerateReportAction(scanId, traceableCliBinaryLocation));
         }
     }
+
+    // Download the binary if the location of the binary is not given.
     private void downloadTraceableCliBinary() {
         try {
             ProcessBuilder pb = new ProcessBuilder(
@@ -117,6 +122,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         }
     }
 
+    // Run the scan.
     private void runAndInitScan( TaskListener listener, Run<?, ?> run ){
         try {
             ProcessBuilder pb = new ProcessBuilder(
@@ -145,6 +151,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
         }
     }
 
+    //Stop the scan with the given scan ID.
     private void abortScan(TaskListener listener) {
         try {
             ProcessBuilder pb = new ProcessBuilder(
