@@ -5,7 +5,7 @@ scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
 optionsArr=('-n' '-t' '--token' '--plugins' '-i' '-e' '-u' '--traceable-server' '--idle-timeout' '--scan-timeout' '-bi' '-bu')
 stringArr=('-i' '-e' )
 
-echo $scanInitCmd
+
 iterator=0
 for option in "${@:2}"
 do

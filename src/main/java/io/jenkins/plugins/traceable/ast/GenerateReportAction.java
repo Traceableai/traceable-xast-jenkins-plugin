@@ -13,11 +13,13 @@ import java.util.regex.Pattern;
 public class GenerateReportAction implements RunAction2 {
 
     private String scanId;
+    private String traceableCliBinaryLocation;
     private String report;
     private transient Run run;
 
-    public GenerateReportAction (String scanId) {
+    public GenerateReportAction (String scanId, String traceableCliBinaryLocation) {
         this.scanId = scanId;
+        this.traceableCliBinaryLocation = traceableCliBinaryLocation;
     }
 
     @Override
@@ -26,6 +28,7 @@ public class GenerateReportAction implements RunAction2 {
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/show_ast_scan.sh",
+                    traceableCliBinaryLocation,
                     scanId
             );
             Process showAstScan = pb.start();
