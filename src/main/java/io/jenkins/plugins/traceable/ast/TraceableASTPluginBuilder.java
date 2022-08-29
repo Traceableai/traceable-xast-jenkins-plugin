@@ -1,5 +1,8 @@
 package io.jenkins.plugins.traceable.ast;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import com.google.common.io.Files;
 import hudson.Launcher;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -13,9 +16,16 @@ import hudson.tasks.BuildStepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import javax.servlet.ServletException;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Writer;
+import java.util.Arrays;
 import java.util.Scanner;
+import java.util.UUID;
+
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -71,8 +81,8 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
 
     @DataBoundSetter
     public void setPluginsToInclude(String pluginsToInclude) {
-        if(!(pluginsToInclude == null || pluginsToInclude.equals("")))
-        this.pluginsToInclude = pluginsToInclude;
+        if (!(pluginsToInclude == null || pluginsToInclude.equals("")))
+            this.pluginsToInclude = pluginsToInclude;
     }
 
     @DataBoundSetter
@@ -97,7 +107,7 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 
         if (traceableCliBinaryLocation == null || traceableCliBinaryLocation.equals("")) {
-          downloadTraceableCliBinary();
+          downloadTraceableCliBinary(listener);
         }
         runAndInitScan(listener,run);
         if (scanId != null) {
@@ -109,65 +119,71 @@ public class TraceableASTPluginBuilder extends Builder implements SimpleBuildSte
     }
 
     // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary() {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/download_traceable_cli_binary.sh"
-            );
-            Process downloadBinary = pb.start();
-            downloadBinary.waitFor();
-            traceableCliBinaryLocation = "./TraceableCLI/traceable/bin/traceable";
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+    private void downloadTraceableCliBinary(TaskListener listener) {
+        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
+        String[] args = new String[]{};
+        runScript(script_path, args, listener);
     }
 
     // Run the scan.
     private void runAndInitScan( TaskListener listener, Run<?, ?> run ){
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/run_ast_scan.sh",
-                    traceableCliBinaryLocation,
-                    scanName,
-                    testEnvironment,
-                    clientToken,
-                    pluginsToInclude,
-                    includeUrlRegex,
-                    excludeUrlRegex,
-                    targetUrl,
-                    traceableServer,
-                    idleTimeout,
-                    scanTimeout,
-                    run.getId(),
-                    run.getUrl()
-            );
-            Process runAstScan = pb.start();
-            logOutput(runAstScan.getInputStream(), "",listener);
-            logOutput(runAstScan.getErrorStream(), "Error: ",listener);
-            runAstScan.waitFor();
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        String scriptPath = "shell_scripts/run_ast_scan.sh";
+        String[] args =
+          new String[] {
+            traceableCliBinaryLocation,
+            scanName,
+            testEnvironment,
+            clientToken,
+            pluginsToInclude,
+            includeUrlRegex,
+            excludeUrlRegex,
+            targetUrl,
+            traceableServer,
+            idleTimeout,
+            scanTimeout,
+            run.getId(),
+            run.getUrl()
+          };
+        runScript(scriptPath, args, listener);
     }
 
     //Stop the scan with the given scan ID.
     private void abortScan(TaskListener listener) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "src/main/resources/io/jenkins/plugins/traceable/ast/TraceableASTPluginBuilder/shell_scripts/stop_ast_scan.sh",
-                    traceableCliBinaryLocation,
-                    scanId
-            );
-            Process stopAstScan = pb.start();
-            logOutput(stopAstScan.getInputStream(), "",listener);
-            logOutput(stopAstScan.getErrorStream(), "Error: ",listener);
-            stopAstScan.waitFor();
-        } catch (IOException | InterruptedException e) {
+        String scriptPath = "shell_scripts/stop_ast_scan.sh";
+        String[] args = new String[]{
+                traceableCliBinaryLocation,
+                scanId
+            };
+        runScript(scriptPath,args,listener);
+    }
+
+    private void runScript(String scriptPath, String[] args, TaskListener listener) {
+        try{
+        // Read the bundled script as string
+        String bundledScript = CharStreams.toString(
+                new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
+        // Create a temp file with uuid appended to the name just to be safe
+        File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
+        // Write the string to temp file
+        BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
+        x.write(bundledScript);
+        x.close();
+        String execScript = "/bin/sh " + tempFile.getAbsolutePath();
+        for(int i=0;i<args.length;i++) {
+            if(args[i]!=null && !args[i].equals(""))
+                execScript += " " + args[i];
+            else execScript += " ''";
+        }
+        Process pb = Runtime.getRuntime().exec(execScript);
+        logOutput(pb.getInputStream(), "",listener);
+        logOutput(pb.getErrorStream(), "Error: ",listener);
+        pb.waitFor();
+        tempFile.delete();
+
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
-
     private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
         new Thread(() -> {
             Scanner scanner = new Scanner(inputStream, "UTF-8");

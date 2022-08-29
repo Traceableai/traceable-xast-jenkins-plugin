@@ -10,7 +10,7 @@ stringArr=('-i' '-e' )
 iterator=0
 for option in "${@:2}"
 do
-  if [ -z "$option" ]
+  if [ -z "$option" ] || [ "$option" = "''" ]
   then
     echo "${optionsArr[$iterator]}" is Null
   else
@@ -33,4 +33,5 @@ do
 done
 
 # Run the command
+echo $scanInitCmd
 $scanInitCmd
