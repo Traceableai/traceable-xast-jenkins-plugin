@@ -1,13 +1,13 @@
-# Load bashrc to get the JFROG TOKEN
-source ~/.bashrc
-
-# Creating directory to contain the cli binary
-mkdir TraceableCLI
-cd TraceableCLI
-
-#Download the cli wheel file from Jfrog
-curl -H "X-JFrog-Art-Api:$JFROG_TOKEN" -O 'https://traceableai.jfrog.io/artifactory/pypi-local/traceablecli/0.1.322/traceablecli-0.1.322-py3-none-any.whl'
-
-#Unzip the wheel file
-pip3 install --force-reinstall traceablecli* --prefix=./
-docker login -u dhruv.singhal -p AKCp8nFvkrBCWhGiFiSgbmc8QPFvxbT1tHAhBDsx3QecWSADJFzscmNZtc4BuNXLh4HAJKHtY https://traceableai-docker-dev.jfrog.io/v2/traceable/traceable-cli
+var version = ${1}
+if [[ "$version"  = *"-rc."* ]]
+then
+  curl -OL https://downloads.traceable.ai/cli/rc/${version}/traceable-cli-${version}-linux-x86_64.tar.gz
+  tar -xvf ./traceable-cli-${version}-linux-x86_64.tar.gz
+elif [ "$version" = "latest" ] || [ "$version" = "" ] || [ -z "$version" ]
+then
+  curl -OL https://downloads.traceable.ai/cli/release/latest/traceable-cli-latest-linux-x86_64.tar.gz
+  tar -xvf ./traceable-cli-latest-linux-x86_64.tar.gz
+else
+    curl -OL https://downloads.traceable.ai/cli/release/${version}/traceable-cli-${version}-linux-x86_64.tar.gz
+    tar -xvf ./traceable-cli-${version}-linux-x86_64.tar.gz
+fi

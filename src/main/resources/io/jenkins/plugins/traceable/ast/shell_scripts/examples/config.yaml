@@ -1,0 +1,29 @@
+# This is a sample user config. 
+# Copy it to traceable config folder ~/.traceable/config.yaml to apply. 
+# This config overrides data in default.yaml.
+# Do not make edits to default.yaml as changes will be lost.
+scan:
+  plugins:
+    # Enable prehooks for all plugins
+    pre_hooks:
+      - crapi_login_prehook
+    post_hooks:
+      - crapi_login_posthook
+    authentication:
+      unauthenticated_access:
+        pre_hooks:
+          # Disable crapi_login_prehook for unauthenticated_access
+          - crapi_login_prehook:
+              disabled: true
+          # Disable crapi_login_posthook for unauthenticated_access
+          - crapi_login_posthook:
+              disabled: true
+    authorization:
+        bfla:
+          pre_hooks:
+            - crapi_creds_prehook
+    #security_misconfiguration:
+    #  mulesoft_integration:
+    #      
+    custom:
+      sample_plugin: {}

@@ -1,37 +1,47 @@
+#!/bin/bash
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
+dockerEnv=''
+if  [[ -n ${6} ]] && [[ ${6} != "''" ]]
+then
+  export TRACEABLE_ROOT_CA_FILE_NAME=${6}
+  dockerEnv=$dockerEnv' --env TRACEABLE_ROOT_CA_FILE_NAME '
+fi
+if  [[ -n ${7} ]] && [[ ${7} != "''" ]]
+then
+  export TRACEABLE_CLI_CERT_FILE_NAME=${7}
+  dockerEnv=$dockerEnv' --env TRACEABLE_CLI_CERT_FILE_NAME '
+fi
+if  [[ -n ${8} ]] && [[ ${8} != "''" ]]
+then
+  export TRACEABLE_CLI_KEY_FILE_NAME=${8}
+  dockerEnv=$dockerEnv' --env TRACEABLE_CLI_KEY_FILE_NAME '
+fi
 
-traceableCliBinaryLocation=$1
-scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('-n' '-t' '--token' '--plugins' '-i' '-e' '-u' '--traceable-server' '--idle-timeout' '--scan-timeout' '-bi' '-bu')
-stringArr=('-i' '-e' )
+setLocalCli=$1
+traceableCliBinaryLocation=$2
+
+if [ "$setLocalCli" = false ]
+then
+  docker volume create traceable_ast
+  traceableCliBinaryLocation='docker run -v traceable_ast:/app/userdata '$dockerEnv$traceableCliBinaryLocation
+fi
+
+scanRunCmd=$traceableCliBinaryLocation' ast scan run'
+optionsArr=('--token'  '--idle-timeout' '--max-retries')
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:2}"
+for option in "${@:3:3}"
 do
   if [ -z "$option" ] || [ "$option" = "''" ]
   then
     echo "${optionsArr[$iterator]}" is Null
   else
-    presentInStringArr=0
-    for subOption in "${stringArr[@]}"
-    do
-      if [ "$subOption" == "${optionsArr[$iterator]}" ]
-      then
-        presentInStringArr=1
-      fi
-    done
-    if [ $presentInStringArr -eq 0 ]
-    then
-      scanInitCmd=$scanInitCmd" "${optionsArr[$iterator]}" "${option}
-    else
-      scanInitCmd=$scanInitCmd" "${optionsArr[$iterator]}" "\"${option}\"
-    fi
+    scanRunCmd=$scanRunCmd" "${optionsArr[$iterator]}" "${option}
   fi
   iterator=$(($iterator+1))
 done
 
 # Run the command
-echo $scanInitCmd
-$scanInitCmd
+$scanRunCmd
