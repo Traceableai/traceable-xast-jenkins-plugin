@@ -1,21 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-
-    <style type="text/css">
-        .ast_scan_run_cli_environment {
-        align-items: center;
-        display: grid;
-        grid-row-gap: 5px;
-        grid-template-columns: minmax(auto,auto) minmax(auto,auto) 10px 1fr;
-        padding-bottom: 10px;
-        }
-        /* workaround a jenkins issue with vertical alignment of radio buttons */
-        #jenkins .jenkins-config table td.setting-main input[type='radio'] {
-        position: relative;
-        top: -0.1em;
-        }
-    </style>
-
+    <f:entry></f:entry>
     <f:entry title="${%ScanName}">
         <f:textbox field="scanName"/>
     </f:entry>
@@ -25,14 +10,31 @@
     <f:entry title="${%ClientToken} *">
         <f:password field="clientToken"/>
     </f:entry>
-    <f:entry title="${%CliRunEnvironment}">
-        <div class="ast_scan_run_cli_environment">
-        <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
-            <span/>
-        <f:textbox field="traceableCliBinaryLocation"></f:textbox>
-        <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
-        </div>
-    </f:entry>
+    <f:block>
+    <table>
+        <f:optionalBlock name="selectedInstallCli" title="${%InstallCli}"  checked="true" inline="true">
+            <f:entry></f:entry>
+            <f:entry title="${%CliVersion}" description="(Installs latest CLI version by default)">
+                <f:textbox field="cliVersion"/>
+            </f:entry>
+        </f:optionalBlock>
+    </table>
+    </f:block>
+    <f:block>
+    <table>
+        <f:optionalBlock name="selectedUseInstalledCli" title="${%UseInstalledCli}" inline="true">
+            <f:entry></f:entry>
+            <f:entry title="${%CliRunEnvironment}">
+                <div>
+                    <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
+                    <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
+                </div>
+                <f:textbox field="traceableCliBinaryLocation"/>
+            </f:entry>
+        </f:optionalBlock>
+    </table>
+    </f:block>
+    <f:entry></f:entry>
     <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable-ast/field-help/Plugins.html">
         <f:textbox  field="pluginsToInclude"/>
     </f:entry>
@@ -49,16 +51,10 @@
         <f:entry title="${%TraceableServer}" field="traceableServer">
             <f:textbox />
         </f:entry>
-        <f:entry title="${%IdleTimeout} (in minutes)" field="idleTimeout">
-            <f:textbox />
-        </f:entry>
         <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout">
             <f:textbox />
         </f:entry>
         <f:entry title="${%ReferenceEnv}" field="referenceEnv">
-            <f:textbox />
-        </f:entry>
-        <f:entry title="${%MaxRetries}" field="maxRetries">
             <f:textbox />
         </f:entry>
         <f:entry title="${%CaFileName}" field="traceableRootCaFileName">

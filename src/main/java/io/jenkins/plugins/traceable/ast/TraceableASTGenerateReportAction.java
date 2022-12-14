@@ -9,7 +9,7 @@ import jenkins.model.RunAction2;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Scanner;
@@ -17,28 +17,99 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GenerateReportAction implements RunAction2 {
+public class TraceableASTGenerateReportAction implements RunAction2 {
 
-    private String scanId;
-    private String traceableCliBinaryLocation;
     private String report;
     private transient Run run;
+    private String clientToken;
 
-    public GenerateReportAction (String scanId, String traceableCliBinaryLocation) {
-        this.scanId = scanId;
-        this.traceableCliBinaryLocation = traceableCliBinaryLocation;
+    public TraceableASTGenerateReportAction(String clientToken) {
+        this.clientToken = clientToken;
     }
 
     @Override
     public void onAttached(Run<?, ?> r) {
         this.run = r;
         String scriptPath = "shell_scripts/show_ast_scan.sh";
-        String[] args = new String[]{
-                traceableCliBinaryLocation,
-                scanId
-        };
+        String[] args = null;
+        if (TraceableASTInitAndRunStepBuilder.getClientToken() != null) {
+            args =
+                    new String[] {
+                            TraceableASTInitAndRunStepBuilder.getSelectedLocalCliEnvironment().toString(),
+                            TraceableASTInitAndRunStepBuilder.getTraceableCliBinaryLocation(),
+                            TraceableASTInitAndRunStepBuilder.getScanId(),
+                            clientToken,
+                            TraceableASTInitAndRunStepBuilder.getTraceableRootCaFileName(),
+                            TraceableASTInitAndRunStepBuilder.getTraceableCliCertFileName(),
+                            TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName()
+                    };
+        }
+        if (TraceableASTInitStepBuilder.getClientToken() != null) {
+            args =
+                    new String[] {
+                            TraceableASTInitStepBuilder.getSelectedLocalCliEnvironment().toString(),
+                            TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
+                            TraceableASTInitStepBuilder.getScanId(),
+                            clientToken,
+                            TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
+                            TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
+                            TraceableASTInitStepBuilder.getTraceableCliKeyFileName()
+                    };
+        }
         runScript(scriptPath, args);
     }
+
+    private void runScript(String scriptPath, String[] args) {
+        try{
+            // Read the bundled script as string
+            String bundledScript = CharStreams.toString(
+                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
+            // Create a temp file with uuid appended to the name just to be safe
+            File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
+            // Write the string to temp file
+            BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
+            x.write(bundledScript);
+            x.close();
+            String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
+            for (String arg : args) {
+                execScript = new StringBuffer().append(execScript).append(" ").append(arg).toString();
+            }
+            Process pb = Runtime.getRuntime().exec(execScript);
+            logOutput(pb.getInputStream());
+            logOutput(pb.getErrorStream());
+            pb.waitFor();
+            boolean deleted_temp = tempFile.delete();
+            if(!deleted_temp) {
+                throw new FileNotFoundException("Temp file not found");
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        this.run = r;
+    }
+
+    @Override
+    public String getIconFileName() {
+        return "/plugin/traceable/img/Traceable_white_bg_logo.png";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Traceable AST Report";
+    }
+
+    @Override
+    public String getUrlName() {
+        return "traceable_ast_report";
+    }
+
+    public Run getRun() { return run; }
+
+    public String getReport() { return report; }
 
     private void logOutput(InputStream inputStream) {
         new Thread(() -> {
@@ -59,55 +130,4 @@ public class GenerateReportAction implements RunAction2 {
         }).start();
 
     }
-    private void runScript(String scriptPath, String[] args) {
-        try{
-            // Read the bundled script as string
-            String bundledScript = CharStreams.toString(
-                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
-            // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
-            // Write the string to temp file
-            BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
-            x.write(bundledScript);
-            x.close();
-            String execScript = "/bin/sh " + tempFile.getAbsolutePath();
-            for(int i=0;i<args.length;i++) {
-                execScript += " " + args[i];
-            }
-            Process pb = Runtime.getRuntime().exec(execScript);
-            logOutput(pb.getInputStream());
-            logOutput(pb.getErrorStream());
-            pb.waitFor();
-            tempFile.delete();
-
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onLoad(Run<?, ?> r) {
-        this.run = r;
-    }
-
-    @Override
-    public String getIconFileName() {
-        return "/plugin/traceable-ast/img/Traceable_white_bg_logo.png";
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "Traceable AST Report";
-    }
-
-    @Override
-    public String getUrlName() {
-        return "traceable_ast_report";
-    }
-
-    public Run getRun() {
-        return run;
-    }
-
-    public String getReport() { return report; }
 }

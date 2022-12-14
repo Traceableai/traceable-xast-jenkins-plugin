@@ -8,10 +8,10 @@
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
-    <artifactId>traceable-ast</artifactId>
+    <artifactId>traceable</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
-    <name>Traceable AST Plugin</name>
+    <name>Traceable Plugin</name>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <licenses>
         <license>

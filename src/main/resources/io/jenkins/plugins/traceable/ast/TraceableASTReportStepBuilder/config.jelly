@@ -1,9 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry title="${%IdleTimeout} (in minutes)" field="idleTimeout">
-        <f:textbox />
-    </f:entry>
-    <f:entry title="${%MaxRetries}" field="maxRetries">
-        <f:textbox />
+    <f:entry title="${%ClientToken}" field="clientToken">
+        <f:password />
     </f:entry>
 </j:jelly>

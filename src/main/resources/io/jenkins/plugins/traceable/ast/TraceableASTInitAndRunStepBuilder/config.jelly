@@ -1,29 +1,42 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-
-    <f:entry title="${%ScanName}" field="scanName">
-        <f:textbox />
+    <f:entry></f:entry>
+    <f:entry title="${%ScanName}">
+        <f:textbox field="scanName"/>
     </f:entry>
-    <f:entry title="${%TestEnvironment} *" field="testEnvironment">
-        <f:textbox />
+    <f:entry title="${%TestEnvironment} *">
+        <f:textbox field="testEnvironment"/>
     </f:entry>
-    <f:entry title="${%ClientToken} *"  >
-        <f:password field="clientToken" />
+    <f:entry title="${%ClientToken} *">
+        <f:password field="clientToken"/>
     </f:entry>
-    <f:dropdownList name="Run scan using cli on local/docker" title="check" >
-        <f:dropdownListBlock value="local" title="local"  selected="true">
-            <f:entry title="${%TraceableCliBinaryLocation}" field="traceableCliBinaryLocation">
-                <f:textbox value="${it.traceableCliBinaryLocation}"/>
-            </f:entry>
-        </f:dropdownListBlock>
-        <f:dropdownListBlock value="docker" title="docker" >
-            <f:entry title="tyml" field="traceableCliBinaryLocation">
-                <f:textbox value="${it.traceableCliBinaryLocation}"/>
-            </f:entry>
-        </f:dropdownListBlock>
-    </f:dropdownList>
-    <f:entry title="${%PluginsToInclude} (comma seperated)" field="pluginsToInclude" help="/plugin/traceable-ast/field-help/Plugins.html" >
-        <f:textbox  value="${it.pluginsToInclude}" />
+    <f:block>
+        <table>
+            <f:optionalBlock name="selectedInstallCli" title="${%InstallCli}"  inline="true" checked="true">
+                <f:entry></f:entry>
+                <f:entry title="${%CliVersion}" description="(Installs latest CLI version by default)">
+                    <f:textbox field="cliVersion"/>
+                </f:entry>
+            </f:optionalBlock>
+        </table>
+    </f:block>
+    <f:block>
+        <table>
+            <f:optionalBlock name="selectedUseInstalledCli" title="${%UseInstalledCli}"  inline="true" >
+                <f:entry></f:entry>
+                <f:entry title="${%CliRunEnvironment}">
+                    <div>
+                        <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
+                        <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
+                    </div>
+                    <f:textbox field="traceableCliBinaryLocation"/>
+                </f:entry>
+            </f:optionalBlock>
+        </table>
+    </f:block>
+    <f:entry></f:entry>
+    <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable-ast/field-help/Plugins.html">
+        <f:textbox field="pluginsToInclude"/>
     </f:entry>
     <f:advanced>
         <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">
@@ -42,6 +55,21 @@
             <f:textbox />
         </f:entry>
         <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%ReferenceEnv}" field="referenceEnv">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%MaxRetries}" field="maxRetries">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%CaFileName}" field="traceableRootCaFileName">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%CliCertFileName}" field="traceableCliCertFileName">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%CliKeyFileName}" field="traceableCliKeyFileName">
             <f:textbox />
         </f:entry>
     </f:advanced>
