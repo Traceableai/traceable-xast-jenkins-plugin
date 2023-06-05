@@ -2,7 +2,6 @@ package io.jenkins.plugins.traceable.ast;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 import hudson.Launcher;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -13,14 +12,14 @@ import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.UUID;
@@ -29,12 +28,19 @@ import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
 
 
+@Slf4j
 public class TraceableASTInitAndRunStepBuilder extends Builder implements SimpleBuildStep {
 
     private String scanName;
     private String testEnvironment;
     private static String clientToken;
     private String pluginsList;
+    private String policyName;
+    private String scanEvalCriteria;
+    private String openApiSpecIds;
+    private String openApiSpecFiles;
+    private String postmanCollection;
+    private String postmanEnvironment;
     private String pluginsToInclude;
     private Boolean selectedInstallCli;
     private Boolean selectedUseInstalledCli;
@@ -78,6 +84,18 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
     public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
+
+    public String getScanEvalCriteria() { return scanEvalCriteria; }
+
+    public String getPostmanEnvironment() { return postmanEnvironment; }
+
+    public String getPostmanCollection() { return postmanCollection; }
+
+    public String getOpenApiSpecFiles() { return openApiSpecFiles; }
+
+    public String getOpenApiSpecIds() { return openApiSpecIds; }
+
+    public String getPolicyName() { return policyName; }
 
     @DataBoundConstructor
     public TraceableASTInitAndRunStepBuilder() {
@@ -169,6 +187,37 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         TraceableASTInitAndRunStepBuilder.traceableCliKeyFileName = traceableCliKeyFileName;
     }
 
+    @DataBoundSetter
+    public void setScanEvalCriteria(String scanEvalCriteria) {
+        this.scanEvalCriteria = scanEvalCriteria;
+    }
+
+    @DataBoundSetter
+    public void setPostmanEnvironment(String postmanEnvironment) {
+        this.postmanEnvironment = postmanEnvironment;
+    }
+
+    @DataBoundSetter
+    public void setPostmanCollection(String postmanCollection) {
+        this.postmanCollection = postmanCollection;
+    }
+
+    @DataBoundSetter
+    public void setOpenApiSpecIds(String openApiSpecIds) {
+        this.openApiSpecIds = openApiSpecIds;
+    }
+
+    @DataBoundSetter
+    public void setOpenApiSpecFiles(String openApiSpecFiles) {
+        this.openApiSpecFiles = openApiSpecFiles;
+    }
+
+    @DataBoundSetter
+    public void setPolicyName(String policyName) {
+        this.policyName = policyName;
+    }
+
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         scanEnded = false;
@@ -202,6 +251,21 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     // Run the scan.
     private void runAndInitScan( TaskListener listener, Run<?, ?> run ){
+        String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
+        try {
+        String home = System.getProperty("user.home");
+        Files.createDirectories(Paths.get(home , "/.traceable"));
+
+        // Creating an instance of file
+        Path path = Paths.get(home , "/.traceable/config.yaml");
+        byte[] arr = configFile.getBytes();
+
+        // Write the string to file
+            java.nio.file.Files.write(path, arr, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            log.error("Error writing to config.yaml the config: {}", configFile);
+            throw new RuntimeException(e);
+        }
         String scriptPath = "shell_scripts/run_and_init_ast_scan.sh";
         String[] args =
           new String[] {
@@ -221,9 +285,13 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             run.getUrl(),
             referenceEnv,
             maxRetries,
+            openApiSpecIds,
+            openApiSpecFiles,
+            postmanCollection,
+            postmanEnvironment,
             traceableRootCaFileName,
             traceableCliCertFileName,
-            traceableCliKeyFileName
+            traceableCliKeyFileName,
           };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }
@@ -247,7 +315,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         // Create a temp file with uuid appended to the name just to be safe
         File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
         // Write the string to temp file
-        BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
+        BufferedWriter x = com.google.common.io.Files.newWriter(tempFile,  Charsets.UTF_8);
         x.write(bundledScript);
         x.close();
             String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();

@@ -1,39 +1,36 @@
 #!/bin/bash
-export LC_ALL=en_US.utf-8
-export LANG=en_US.utf-8
+
 dockerEnv=''
-if  [[ -n ${17} ]] && [[ ${17} != "''" ]]
+if  [[ -n ${21} ]] && [[ ${21} != "''" ]]
 then
-  export TRACEABLE_ROOT_CA_FILE_NAME=${17}
+  export TRACEABLE_ROOT_CA_FILE_NAME=${21}
   dockerEnv=$dockerEnv' --env TRACEABLE_ROOT_CA_FILE_NAME '
 fi
-if  [[ -n ${18} ]] && [[ ${18} != "''" ]]
+if  [[ -n ${22} ]] && [[ ${22} != "''" ]]
 then
-  export TRACEABLE_CLI_CERT_FILE_NAME=${18}
+  export TRACEABLE_CLI_CERT_FILE_NAME=${22}
   dockerEnv=$dockerEnv' --env TRACEABLE_CLI_CERT_FILE_NAME '
 fi
-if  [[ -n ${19} ]] && [[ ${19} != "''" ]]
+if  [[ -n ${23} ]] && [[ ${23} != "''" ]]
 then
-  export TRACEABLE_CLI_KEY_FILE_NAME=${19}
+  export TRACEABLE_CLI_KEY_FILE_NAME=${23}
   dockerEnv=$dockerEnv' --env TRACEABLE_CLI_KEY_FILE_NAME '
 fi
 
 setLocalCli=$1
 traceableCliBinaryLocation=$2
-
 if [ "$setLocalCli" = false ]
 then
-  docker volume create traceable_ast
-  traceableCliBinaryLocation='docker run -v traceable_ast:/app/userdata '$dockerEnv$traceableCliBinaryLocation
+  traceableCliBinaryLocation='docker run -v ~/.traceable:/app/userdata '$dockerEnv$traceableCliBinaryLocation
 fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--build-id' '--build-url' '--reference-env' '--max-retries')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--build-id' '--build-url' '--reference-env' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:3:14}"
+for option in "${@:3:18}"
 do
   if [ -z "$option" ] || [ "$option" = "''" ]
   then
@@ -58,4 +55,5 @@ do
 done
 
 # Run the command
+echo "Run command ""$scanInitCmd"
 $scanInitCmd

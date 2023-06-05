@@ -2,19 +2,19 @@
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
 dockerEnv=''
-if  [[ -n ${15} ]] && [[ ${15} != "''" ]]
+if  [[ -n ${19} ]] && [[ ${19} != "''" ]]
 then
-  export TRACEABLE_ROOT_CA_FILE_NAME=${15}
+  export TRACEABLE_ROOT_CA_FILE_NAME=${19}
   dockerEnv=$dockerEnv' --env TRACEABLE_ROOT_CA_FILE_NAME '
 fi
-if  [[ -n ${16} ]] && [[ ${16} != "''" ]]
+if  [[ -n ${20} ]] && [[ ${20} != "''" ]]
 then
-  export TRACEABLE_CLI_CERT_FILE_NAME=${16}
+  export TRACEABLE_CLI_CERT_FILE_NAME=${20}
   dockerEnv=$dockerEnv' --env TRACEABLE_CLI_CERT_FILE_NAME '
 fi
-if  [[ -n ${17} ]] && [[ ${17} != "''" ]]
+if  [[ -n ${21} ]] && [[ ${21} != "''" ]]
 then
-  export TRACEABLE_CLI_KEY_FILE_NAME=${17}
+  export TRACEABLE_CLI_KEY_FILE_NAME=${21}
   dockerEnv=$dockerEnv' --env TRACEABLE_CLI_KEY_FILE_NAME '
 fi
 
@@ -23,17 +23,16 @@ traceableCliBinaryLocation=$2
 
 if [ "$setLocalCli" = false ]
 then
-  docker volume create traceable_ast
-  traceableCliBinaryLocation='docker run -v traceable_ast:/app/userdata '$dockerEnv$traceableCliBinaryLocation
+  traceableCliBinaryLocation='docker run -v ~/.traceable:/app/userdata '$dockerEnv$traceableCliBinaryLocation
 fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan init'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--scan-timeout' '--build-id' '--build-url' ' --reference-env')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--scan-timeout' '--build-id' '--build-url' ' --reference-env' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:3:12}"
+for option in "${@:3:16}"
 do
   if [ -z "$option" ] || [ "$option" = "''" ]
   then

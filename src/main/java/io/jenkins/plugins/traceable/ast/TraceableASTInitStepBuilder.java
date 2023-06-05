@@ -14,6 +14,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import io.jenkins.cli.shaded.org.apache.commons.lang.ObjectUtils;
 import jenkins.tasks.SimpleBuildStep;
+import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -24,16 +25,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.UUID;
 
+@Slf4j
 public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildStep {
 
     private String scanName;
     private String testEnvironment;
     private static String clientToken;
     private String pluginsList;
+    private String policyName;
+    private String scanEvalCriteria;
+    private String openApiSpecIds;
+    private String openApiSpecFiles;
+    private String postmanCollection;
+    private String postmanEnvironment;
     private String pluginsToInclude;
     private Boolean selectedInstallCli;
     private Boolean selectedUseInstalledCli;
@@ -72,7 +83,17 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
     public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
 
+    public String getScanEvalCriteria() { return scanEvalCriteria; }
 
+    public String getPostmanEnvironment() { return postmanEnvironment; }
+
+    public String getPostmanCollection() { return postmanCollection; }
+
+    public String getOpenApiSpecFiles() { return openApiSpecFiles; }
+
+    public String getOpenApiSpecIds() { return openApiSpecIds; }
+
+    public String getPolicyName() { return policyName; }
 
     @DataBoundConstructor
     public TraceableASTInitStepBuilder() {
@@ -151,6 +172,31 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         TraceableASTInitStepBuilder.traceableCliKeyFileName = traceableCliKeyFileName;
     }
 
+    @DataBoundSetter
+    public void setScanEvalCriteria(String scanEvalCriteria) {
+        this.scanEvalCriteria = scanEvalCriteria;
+    }
+
+    @DataBoundSetter
+    public void setPostmanEnvironment(String postmanEnvironment) {
+        this.postmanEnvironment = postmanEnvironment;
+    }
+
+    @DataBoundSetter
+    public void setPostmanCollection(String postmanCollection) {
+        this.postmanCollection = postmanCollection;
+    }
+
+    @DataBoundSetter
+    public void setOpenApiSpecIds(String openApiSpecIds) {
+        this.openApiSpecIds = openApiSpecIds;
+    }
+
+    @DataBoundSetter
+    public void setOpenApiSpecFiles(String openApiSpecFiles) {
+        this.openApiSpecFiles = openApiSpecFiles;
+    }
+
     public static void setScanId(String scanId) {
         TraceableASTInitStepBuilder.scanId = scanId;
     }
@@ -178,6 +224,21 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     // Run the scan.
     private void initScan( TaskListener listener, Run<?, ?> run ){
+        String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
+        try {
+            String home = System.getProperty("user.home");
+            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable"));
+
+            // Creating an instance of file
+            Path path = Paths.get(home , "/.traceable/config.yaml");
+            byte[] arr = configFile.getBytes();
+
+            // Write the string to file
+            java.nio.file.Files.write(path, arr, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            log.error("Error writing to config.yaml the config: {}", configFile);
+            throw new RuntimeException(e);
+        }
         String scriptPath = "shell_scripts/init_ast_scan.sh";
         String[] args =
                 new String[] {
@@ -195,6 +256,10 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                         run.getId(),
                         run.getUrl(),
                         referenceEnv,
+                        openApiSpecIds,
+                        openApiSpecFiles,
+                        postmanCollection,
+                        postmanEnvironment,
                         traceableRootCaFileName,
                         traceableCliCertFileName,
                         traceableCliKeyFileName

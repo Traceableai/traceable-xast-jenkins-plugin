@@ -23,8 +23,7 @@ traceableCliBinaryLocation=$2
 
 if [ "$setLocalCli" = false ]
 then
-  docker volume create traceable_ast
-  traceableCliBinaryLocation='docker run -v traceable_ast:/app/userdata '$dockerEnv$traceableCliBinaryLocation
+  traceableCliBinaryLocation='docker run -v ~/.traceable:/app/userdata '$dockerEnv$traceableCliBinaryLocation
 fi
 
 scanRunCmd=$traceableCliBinaryLocation' ast scan run'

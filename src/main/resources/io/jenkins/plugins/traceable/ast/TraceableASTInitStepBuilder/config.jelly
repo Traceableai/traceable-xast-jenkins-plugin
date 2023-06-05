@@ -11,34 +11,40 @@
         <f:password field="clientToken"/>
     </f:entry>
     <f:block>
-    <table>
-        <f:optionalBlock name="selectedInstallCli" title="${%InstallCli}"  checked="true" inline="true">
-            <f:entry></f:entry>
-            <f:entry title="${%CliVersion}" description="(Installs latest CLI version by default)">
-                <f:textbox field="cliVersion"/>
-            </f:entry>
-        </f:optionalBlock>
-    </table>
+        <table>
+            <f:optionalBlock name="selectedInstallCli" title="${%InstallCli}"  checked="true" inline="true">
+                <f:entry></f:entry>
+                <f:entry title="${%CliVersion}" description="(Installs latest CLI version by default, if nothing provided)">
+                    <f:textbox field="cliVersion"/>
+                </f:entry>
+            </f:optionalBlock>
+        </table>
     </f:block>
     <f:block>
-    <table>
-        <f:optionalBlock name="selectedUseInstalledCli" title="${%UseInstalledCli}" inline="true">
-            <f:entry></f:entry>
-            <f:entry title="${%CliRunEnvironment}">
-                <div>
-                    <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
-                    <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
-                </div>
-                <f:textbox field="traceableCliBinaryLocation"/>
-            </f:entry>
-        </f:optionalBlock>
-    </table>
+        <table>
+            <f:optionalBlock name="selectedUseInstalledCli" title="${%UseInstalledCli}" inline="true">
+                <f:entry></f:entry>
+                <f:entry title="${%CliRunEnvironment}">
+                    <div>
+                        <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
+                        <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
+                    </div>
+                    <f:textbox field="traceableCliBinaryLocation"/>
+                </f:entry>
+            </f:optionalBlock>
+        </table>
     </f:block>
     <f:entry></f:entry>
-    <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable-ast/field-help/Plugins.html">
-        <f:textbox  field="pluginsToInclude"/>
+    <f:entry title="${%PolicyName}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%ScanEvalCriteria}">
+        <f:textarea field="scanEvalCriteria" />
     </f:entry>
     <f:advanced>
+        <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable-ast/field-help/Plugins.html">
+            <f:textbox  field="pluginsToInclude"/>
+        </f:entry>
         <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">
             <f:textbox/>
         </f:entry>
@@ -54,7 +60,16 @@
         <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout">
             <f:textbox />
         </f:entry>
-        <f:entry title="${%ReferenceEnv}" field="referenceEnv">
+        <f:entry title="${%OpenApiSpecIds} (comma seperated)" field="openApiSpecIds">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%OpenApiSpecFiles} (comma seperated)" field="openApiSpecFiles">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%PostmanCollection}" field="postmanCollection">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%PostmanEnvironment}" field="postmanEnvironment">
             <f:textbox />
         </f:entry>
         <f:entry title="${%CaFileName}" field="traceableRootCaFileName">
