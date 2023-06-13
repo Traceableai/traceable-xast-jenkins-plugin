@@ -3,12 +3,9 @@ package io.jenkins.plugins.traceable.ast;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
-import groovy.json.StringEscapeUtils;
 import hudson.model.Result;
 import hudson.model.Run;
 import jenkins.model.RunAction2;
-import jenkins.util.VirtualFile;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
