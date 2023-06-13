@@ -1,4 +1,5 @@
 #!/bin/bash
+
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
 dockerEnv=''
@@ -28,4 +29,4 @@ then
 fi
 
 #Running command to generate the output of the scan with the specific scan-id
-$traceableCliBinaryLocation ast scan report --id $3 --token $4 --wait
+$traceableCliBinaryLocation ast scan report --id $3 --token $4 --wait --output-format md --exit-code

@@ -3,28 +3,46 @@ package io.jenkins.plugins.traceable.ast;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import groovy.json.StringEscapeUtils;
+import hudson.model.Result;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import jenkins.model.RunAction2;
+import jenkins.util.VirtualFile;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class TraceableASTGenerateReportAction implements RunAction2 {
 
-    private String report;
+    private String htmlReport;
     private transient Run run;
-    private String clientToken;
 
-    public TraceableASTGenerateReportAction(String clientToken) {
+    private Boolean selectedLocalCliEnvironment;
+    private String traceableCliBinaryLocation;
+    private String scanId;
+    private String clientToken;
+    private String traceableRootCaFileName;
+    private String traceableCliCertFileName;
+    private String traceableCliKeyFileName;
+
+    public TraceableASTGenerateReportAction(Boolean selectedLocalCliEnvironment, String traceableCliBinaryLocation, String scanId, String clientToken, String traceableRootCaFileName, String traceableCliCertFileName, String traceableCliKeyFileName) {
+        this.selectedLocalCliEnvironment = selectedLocalCliEnvironment;
+        this.traceableCliBinaryLocation = traceableCliBinaryLocation;
+        this.scanId = scanId;
         this.clientToken = clientToken;
+        this.traceableRootCaFileName = traceableRootCaFileName;
+        this.traceableCliCertFileName = traceableCliCertFileName;
+        this.traceableCliKeyFileName = traceableCliKeyFileName;
     }
 
     @Override
@@ -32,31 +50,18 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         this.run = r;
         String scriptPath = "shell_scripts/show_ast_scan.sh";
         String[] args = null;
-        if (TraceableASTInitAndRunStepBuilder.getClientToken() != null) {
             args =
                     new String[] {
-                            TraceableASTInitAndRunStepBuilder.getSelectedLocalCliEnvironment().toString(),
-                            TraceableASTInitAndRunStepBuilder.getTraceableCliBinaryLocation(),
-                            TraceableASTInitAndRunStepBuilder.getScanId(),
+                            selectedLocalCliEnvironment.toString(),
+                            traceableCliBinaryLocation,
+                            scanId,
                             clientToken,
-                            TraceableASTInitAndRunStepBuilder.getTraceableRootCaFileName(),
-                            TraceableASTInitAndRunStepBuilder.getTraceableCliCertFileName(),
-                            TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName()
+                            traceableRootCaFileName,
+                            traceableCliCertFileName,
+                            traceableCliKeyFileName
                     };
-        }
-        if (TraceableASTInitStepBuilder.getClientToken() != null) {
-            args =
-                    new String[] {
-                            TraceableASTInitStepBuilder.getSelectedLocalCliEnvironment().toString(),
-                            TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
-                            TraceableASTInitStepBuilder.getScanId(),
-                            clientToken,
-                            TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
-                            TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
-                            TraceableASTInitStepBuilder.getTraceableCliKeyFileName()
-                    };
-        }
         runScript(scriptPath, args);
+
     }
 
     private void runScript(String scriptPath, String[] args) {
@@ -71,18 +76,26 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
             x.write(bundledScript);
             x.close();
             String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
-            for (String arg : args) {
-                execScript = new StringBuffer().append(execScript).append(" ").append(arg).toString();
+            for(int i=0;i<args.length;i++) {
+                if(args[i]!=null && !args[i].equals(""))
+                    execScript += " " + args[i];
+                else execScript += " ''";
             }
             Process pb = Runtime.getRuntime().exec(execScript);
             logOutput(pb.getInputStream());
-            logOutput(pb.getErrorStream());
+//            logOutput(pb.getErrorStream());
             pb.waitFor();
+            int reportCmdExitValue = pb.exitValue();
+
+            if(reportCmdExitValue != 0) {
+                run.setResult(Result.FAILURE);
+            }
             boolean deleted_temp = tempFile.delete();
             if(!deleted_temp) {
                 throw new FileNotFoundException("Temp file not found");
             }
         } catch (Exception e){
+            log.error("Exception in running {} script : {}", scriptPath, e);
             e.printStackTrace();
         }
     }
@@ -109,25 +122,71 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 
     public Run getRun() { return run; }
 
-    public String getReport() { return report; }
+    public String getHtmlReport() { return htmlReport; }
 
     private void logOutput(InputStream inputStream) {
-        new Thread(() -> {
             Scanner scanner = new Scanner(inputStream, "UTF-8");
+            StringBuilder report = new StringBuilder();
             while (scanner.hasNextLine()) {
-                synchronized (this) {
                     String line = scanner.nextLine();
-                    report += line + "\n";
-                }
+                    report.append(line).append("\n");
             }
             scanner.close();
-            Pattern REPORT_PATTERN = Pattern.compile("Name.*",Pattern.DOTALL);
-            Matcher m = REPORT_PATTERN.matcher(report);
+            Pattern REPORT_PATTERN = Pattern.compile("<.*",Pattern.DOTALL);
+            Matcher m = REPORT_PATTERN.matcher(report.toString());
             if(m.find()) {
-                report = m.group();
+               String markdownReport =  m.group();
+               htmlReport = createHtmlReport(markdownReport);
             }
+    }
+    private String createHtmlReport(String markdown) {
+        try {
+            File mdTempFile = new File("md_temp.md");
+            writeToFile(mdTempFile, markdown);
 
-        }).start();
+            // Prepare a file path for output
+            String home = System.getProperty("user.home");
+            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable_jenkins"));
+
+            // Creating an instance of file
+            Path htmlFilePath = Paths.get(home , "/.traceable_jenkins/", run.getId(),"_report.html");
+
+            // Convert Markdown to HTML
+            com.aspose.html.converters.Converter.convertMarkdown("md_temp.md", htmlFilePath.toString());
+            String report = readFile(htmlFilePath);
+            boolean deleted_temp = mdTempFile.delete();
+            if (!deleted_temp) {
+                throw new FileNotFoundException("Temp file not found");
+            }
+            return report;
+        } catch (Exception e) {
+            log.error("Not able to generate report ", e);
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    private String readFile(Path filePath) {
+        try {
+                InputStream is = java.nio.file.Files.newInputStream(filePath);
+                InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(isr);
+            return br.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    private void writeToFile(File file, String data) {
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(file,true);
+        fw.append(data);
+        fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     }
-}

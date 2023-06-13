@@ -12,23 +12,15 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import io.jenkins.cli.shaded.org.apache.commons.lang.ObjectUtils;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -99,12 +91,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public TraceableASTInitStepBuilder() {
         traceableCliBinaryLocation = null;
         selectedLocalCliEnvironment = true;
-        String propFilePackage = "io.jenkins.plugins.traceable.ast.TraceableASTInitStepBuilder.config";
-        ResourceBundle rb = ResourceBundle.getBundle(propFilePackage);
-        if (rb != null) {
-            pluginsList = rb.getString("PluginsList");
-        } else { return; }
-        pluginsToInclude = pluginsList;
     }
 
     @DataBoundSetter
@@ -135,9 +121,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     }
 
     @DataBoundSetter
-    public void setPluginsToInclude(String pluginsToInclude) {
-        if(!(pluginsToInclude == null || pluginsToInclude.equals(""))) { this.pluginsToInclude = pluginsToInclude; }
-    }
+    public void setPluginsToInclude(String pluginsToInclude) { this.pluginsToInclude = pluginsToInclude; }
 
     @DataBoundSetter
     public void setIncludeUrlRegex(String includeUrlRegex) { this.includeUrlRegex = includeUrlRegex; }
@@ -219,7 +203,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         String script_path = "shell_scripts/download_traceable_cli_binary.sh";
         String[] args = new String[]{};
         runScript(script_path, args, listener);
-        traceableCliBinaryLocation = "./traceable";
+         traceableCliBinaryLocation = "./traceable";
     }
 
     // Run the scan.
@@ -234,7 +218,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             byte[] arr = configFile.getBytes();
 
             // Write the string to file
-            java.nio.file.Files.write(path, arr, StandardOpenOption.CREATE);
+            java.nio.file.Files.write(path, arr);
         } catch (IOException e) {
             log.error("Error writing to config.yaml the config: {}", configFile);
             throw new RuntimeException(e);
@@ -247,6 +231,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                         scanName,
                         testEnvironment,
                         clientToken,
+                        policyName,
                         pluginsToInclude,
                         includeUrlRegex,
                         excludeUrlRegex,
@@ -273,18 +258,18 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             String bundledScript = CharStreams.toString(
                     new InputStreamReader(getClass().getResourceAsStream(scriptPath), StandardCharsets.UTF_8));
             // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
+            File tempFile = File.createTempFile("script_" + scriptPath.replaceAll(".sh", "")+ "_" + UUID.randomUUID().toString(), ".sh");
             // Write the string to temp file
             BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            String execScript = "/bin/bash " + tempFile.getAbsolutePath();
+            StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
             for(int i=0;i<args.length;i++) {
                 if(args[i]!=null && !args[i].equals(""))
-                    execScript += " " + args[i];
-                else execScript += " ''";
+                    execScript.append(" ").append(args[i]);
+                else execScript.append(" ''");
             }
-            Process pb = Runtime.getRuntime().exec(execScript);
+            Process pb = Runtime.getRuntime().exec(execScript.toString());
             logOutput(pb.getInputStream(), "",listener);
             logOutput(pb.getErrorStream(), "Error: ",listener);
             pb.waitFor();
@@ -294,6 +279,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             }
 
         } catch (Exception e){
+            log.error("Exception in running {} script : {}", scriptPath, e);
             e.printStackTrace();
         }
     }

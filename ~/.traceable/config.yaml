@@ -1,0 +1,8 @@
+scan:
+ plugins:
+  disabled: true
+  custom:
+   disabled: false
+ scanEval:
+  train: sdfd
+  pain: sdk

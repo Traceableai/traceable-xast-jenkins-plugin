@@ -36,7 +36,7 @@
     </f:block>
     <f:entry></f:entry>
     <f:entry title="${%PolicyName}">
-        <f:textbox/>
+        <f:textbox field="policyName" />
     </f:entry>
     <f:entry title="${%ScanEvalCriteria}">
         <f:textarea field="scanEvalCriteria"/>
@@ -46,46 +46,46 @@
             <f:textbox field="pluginsToInclude"/>
         </f:entry>
         <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">
-            <f:textbox/>
+            <f:textbox field="includeUrlRegex"/>
         </f:entry>
         <f:entry title="${%ExcludeUrlRegex}" field="excludeUrlRegex">
-            <f:textbox/>
+            <f:textbox field="excludeUrlRegex"/>
         </f:entry>
-        <f:entry title="${%TargetUrl}" field="targetUrl">
-            <f:textbox/>
+        <f:entry title="${%TargetUrl}" >
+            <f:textbox field="targetUrl"/>
         </f:entry>
-        <f:entry title="${%TraceableServer}" field="traceableServer">
-            <f:textbox />
+        <f:entry title="${%TraceableServer}" >
+            <f:textbox field="traceableServer"/>
         </f:entry>
-        <f:entry title="${%IdleTimeout} (in minutes)" field="idleTimeout">
-            <f:textbox />
+        <f:entry title="${%IdleTimeout} (in minutes)">
+            <f:textbox field="idleTimeout"/>
         </f:entry>
-        <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout">
-            <f:textbox />
+        <f:entry title="${%ScanTimeout} (in minutes)">
+            <f:textbox  field="scanTimeout"/>
         </f:entry>
-        <f:entry title="${%MaxRetries}" field="maxRetries">
-            <f:textbox />
+        <f:entry title="${%MaxRetries}">
+            <f:textbox field="maxRetries"/>
         </f:entry>
-        <f:entry title="${%OpenApiSpecIds} (comma seperated)" field="openApiSpecIds">
-            <f:textbox />
+        <f:entry title="${%OpenApiSpecIds} (comma seperated)">
+            <f:textbox field="openApiSpecIds"/>
         </f:entry>
-        <f:entry title="${%OpenApiSpecFiles} (comma seperated)" field="openApiSpecFiles">
-            <f:textbox />
+        <f:entry title="${%OpenApiSpecFiles} (comma seperated)">
+            <f:textbox field="openApiSpecFiles"/>
         </f:entry>
-        <f:entry title="${%PostmanCollection}" field="postmanCollection">
-            <f:textbox />
+        <f:entry title="${%PostmanCollection}">
+            <f:textbox field="postmanCollection"/>
         </f:entry>
-        <f:entry title="${%PostmanEnvironment}" field="postmanEnvironment">
-            <f:textbox />
+        <f:entry title="${%PostmanEnvironment}">
+            <f:textbox field="postmanEnvironment"/>
         </f:entry>
-        <f:entry title="${%CaFileName}" field="traceableRootCaFileName">
-            <f:textbox />
+        <f:entry title="${%CaFileName}">
+            <f:textbox field="traceableRootCaFileName"/>
         </f:entry>
-        <f:entry title="${%CliCertFileName}" field="traceableCliCertFileName">
-            <f:textbox />
+        <f:entry title="${%CliCertFileName}" >
+            <f:textbox field="traceableCliCertFileName"/>
         </f:entry>
-        <f:entry title="${%CliKeyFileName}" field="traceableCliKeyFileName">
-            <f:textbox />
+        <f:entry title="${%CliKeyFileName}">
+            <f:textbox field="traceableCliKeyFileName"/>
         </f:entry>
     </f:advanced>
 </j:jelly>

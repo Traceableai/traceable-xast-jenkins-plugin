@@ -2,30 +2,26 @@ package io.jenkins.plugins.traceable.ast;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import hudson.Launcher;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-import lombok.ToString;
+import hudson.tasks.Builder;
+import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.UUID;
-
-import jenkins.tasks.SimpleBuildStep;
-import org.kohsuke.stapler.DataBoundSetter;
 
 
 @Slf4j
@@ -101,12 +97,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     public TraceableASTInitAndRunStepBuilder() {
         traceableCliBinaryLocation = null;
         selectedLocalCliEnvironment = true;
-        String propFilePackage = "io.jenkins.plugins.traceable.ast.TraceableASTInitAndRunStepBuilder.config";
-        ResourceBundle rb = ResourceBundle.getBundle(propFilePackage);
-        if (rb != null) {
-            pluginsList = rb.getString("PluginsList");
-        } else { return; }
-        pluginsToInclude = pluginsList;
     }
 
     @DataBoundSetter
@@ -144,9 +134,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     @DataBoundSetter
-    public void setPluginsToInclude(String pluginsToInclude) {
-        if(!(pluginsToInclude == null || pluginsToInclude.equals(""))) { this.pluginsToInclude = pluginsToInclude; }
-    }
+    public void setPluginsToInclude(String pluginsToInclude) { this.pluginsToInclude = pluginsToInclude; }
 
     @DataBoundSetter
     public void setIncludeUrlRegex(String includeUrlRegex) { this.includeUrlRegex = includeUrlRegex; }
@@ -261,7 +249,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         byte[] arr = configFile.getBytes();
 
         // Write the string to file
-            java.nio.file.Files.write(path, arr, StandardOpenOption.CREATE);
+            java.nio.file.Files.write(path, arr);
         } catch (IOException e) {
             log.error("Error writing to config.yaml the config: {}", configFile);
             throw new RuntimeException(e);
@@ -274,6 +262,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             scanName,
             testEnvironment,
             clientToken,
+            policyName,
             pluginsToInclude,
             includeUrlRegex,
             excludeUrlRegex,
@@ -313,7 +302,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         String bundledScript = CharStreams.toString(
                 new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
         // Create a temp file with uuid appended to the name just to be safe
-        File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
+        File tempFile = File.createTempFile("script_" + scriptPath.replaceAll(".sh","") +"_"+ UUID.randomUUID().toString(), ".sh");
         // Write the string to temp file
         BufferedWriter x = com.google.common.io.Files.newWriter(tempFile,  Charsets.UTF_8);
         x.write(bundledScript);
@@ -334,6 +323,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         }
 
         } catch (Exception e){
+            log.error("Exception in running {} script : {}", scriptPath, e);
             e.printStackTrace();
         }
     }
@@ -344,11 +334,10 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
               while (scanner.hasNextLine()) {
                 synchronized (this) {
                   String line = scanner.nextLine();
-
                   // Extract the scan ID from the cli output of scan init command.
                   if (prefix.equals("") && line.contains("Running scan with ID")) {
                     String[] tokens = line.split(" ");
-                    scanId = tokens[tokens.length - 1];
+                    scanId = tokens[tokens.length - 1].substring(0,36);
                   }
 
                   // Don't output the logs of abort scan.

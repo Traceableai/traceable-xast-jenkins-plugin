@@ -98,13 +98,13 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
             BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            String execScript = "/bin/bash " + tempFile.getAbsolutePath();
+            StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
             for(int i=0;i<args.length;i++) {
                 if(args[i]!=null && !args[i].equals(""))
-                    execScript += " " + args[i];
-                else execScript += " ''";
+                    execScript.append(" ").append(args[i]);
+                else execScript.append(" ''");
             }
-            Process pb = Runtime.getRuntime().exec(execScript);
+            Process pb = Runtime.getRuntime().exec(execScript.toString());
             logOutput(pb.getInputStream(), "", listener, caller);
             logOutput(pb.getErrorStream(), "Error: ",listener, caller);
             pb.waitFor();
@@ -129,7 +129,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
                   // Extract the scan ID from the cli output of scan init command.
                   if (prefix.equals("") && line.contains("Running scan with ID")) {
                     String[] tokens = line.split(" ");
-                    TraceableASTInitStepBuilder.setScanId(tokens[tokens.length - 1]);
+                    TraceableASTInitStepBuilder.setScanId(tokens[tokens.length - 1].substring(0,36));
                   }
                   if (!caller.equals("abortScan")) {
                     listener.getLogger().println(prefix + line);

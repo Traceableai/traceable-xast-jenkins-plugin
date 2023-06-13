@@ -6,10 +6,7 @@
             <st:include page="sidepanel.jelly" it="${it.run}" optional="true" />
         </l:side-panel>
         <l:main-panel>
-            <j:set var="myvar" value="${it.report}"/>
-            <pre>
-                ${myvar}
-            </pre>
+           <iframe id="reportsframe" width="100%" height="100%" frameborder="0" style="min-height: 700px;" sandbox="" srcdoc="${it.htmlReport}" />
         </l:main-panel>
     </l:layout>
 </j:jelly>

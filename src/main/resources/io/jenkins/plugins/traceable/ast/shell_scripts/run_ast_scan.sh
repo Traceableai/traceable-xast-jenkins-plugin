@@ -43,4 +43,4 @@ do
 done
 
 # Run the command
-$scanRunCmd
+eval $scanRunCmd
