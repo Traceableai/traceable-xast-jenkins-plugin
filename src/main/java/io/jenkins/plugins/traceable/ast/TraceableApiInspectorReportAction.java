@@ -8,7 +8,14 @@ import hudson.model.Run;
 import jenkins.model.RunAction2;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,83 +26,26 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class TraceableASTGenerateReportAction implements RunAction2 {
+public class TraceableApiInspectorReportAction implements RunAction2 {
 
-    private String htmlReport;
     private transient Run run;
 
-    private Boolean selectedLocalCliEnvironment;
-    private String traceableCliBinaryLocation;
-    private String scanId;
-    private String clientToken;
-    private String traceableRootCaFileName;
-    private String traceableCliCertFileName;
-    private String traceableCliKeyFileName;
+    String reportSummary;
 
-    public TraceableASTGenerateReportAction(Boolean selectedLocalCliEnvironment, String traceableCliBinaryLocation, String scanId, String clientToken, String traceableRootCaFileName, String traceableCliCertFileName, String traceableCliKeyFileName) {
-        this.selectedLocalCliEnvironment = selectedLocalCliEnvironment;
-        this.traceableCliBinaryLocation = traceableCliBinaryLocation;
-        this.scanId = scanId;
-        this.clientToken = clientToken;
-        this.traceableRootCaFileName = traceableRootCaFileName;
-        this.traceableCliCertFileName = traceableCliCertFileName;
-        this.traceableCliKeyFileName = traceableCliKeyFileName;
+    public String getReportSummary() {
+        return reportSummary;
+    }
+
+    public TraceableApiInspectorReportAction(String report) {
+        this.reportSummary = report;
     }
 
     @Override
     public void onAttached(Run<?, ?> r) {
         this.run = r;
-        String scriptPath = "shell_scripts/show_ast_scan.sh";
-        String[] args = null;
-            args =
-                    new String[] {
-                            selectedLocalCliEnvironment.toString(),
-                            traceableCliBinaryLocation,
-                            scanId,
-                            clientToken,
-                            traceableRootCaFileName,
-                            traceableCliCertFileName,
-                            traceableCliKeyFileName
-                    };
-        runScript(scriptPath, args);
 
     }
 
-    private void runScript(String scriptPath, String[] args) {
-        try{
-            // Read the bundled script as string
-            String bundledScript = CharStreams.toString(
-                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
-            // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
-            // Write the string to temp file
-            BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
-            x.write(bundledScript);
-            x.close();
-            String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
-            for(int i=0;i<args.length;i++) {
-                if(args[i]!=null && !args[i].equals(""))
-                    execScript += " " + args[i];
-                else execScript += " ''";
-            }
-            Process pb = Runtime.getRuntime().exec(execScript);
-            logOutput(pb.getInputStream());
-//            logOutput(pb.getErrorStream());
-            pb.waitFor();
-            int reportCmdExitValue = pb.exitValue();
-
-            if(reportCmdExitValue != 0) {
-                run.setResult(Result.FAILURE);
-            }
-            boolean deleted_temp = tempFile.delete();
-            if(!deleted_temp) {
-                throw new FileNotFoundException("Temp file not found");
-            }
-        } catch (Exception e){
-            log.error("Exception in running {} script : {}", scriptPath, e);
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onLoad(Run<?, ?> r) {
@@ -109,81 +59,15 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 
     @Override
     public String getDisplayName() {
-        return "Traceable AST Report";
+        return "Traceable API Inspector Report";
     }
 
     @Override
     public String getUrlName() {
-        return "traceable_ast_report";
+        return "traceable_api_inspector_report";
     }
 
     public Run getRun() { return run; }
 
-    public String getHtmlReport() { return htmlReport; }
-
-    private void logOutput(InputStream inputStream) {
-            Scanner scanner = new Scanner(inputStream, "UTF-8");
-            StringBuilder report = new StringBuilder();
-            while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    report.append(line).append("\n");
-            }
-            scanner.close();
-            Pattern REPORT_PATTERN = Pattern.compile("<.*",Pattern.DOTALL);
-            Matcher m = REPORT_PATTERN.matcher(report.toString());
-            if(m.find()) {
-               String markdownReport =  m.group();
-               htmlReport = createHtmlReport(markdownReport);
-            }
-    }
-    private String createHtmlReport(String markdown) {
-        try {
-            File mdTempFile = new File("md_temp.md");
-            writeToFile(mdTempFile, markdown);
-
-            // Prepare a file path for output
-            String home = System.getProperty("user.home");
-            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable_jenkins"));
-
-            // Creating an instance of file
-            Path htmlFilePath = Paths.get(home , "/.traceable_jenkins/", run.getId(),"_report.html");
-
-            // Convert Markdown to HTML
-            com.aspose.html.converters.Converter.convertMarkdown("md_temp.md", htmlFilePath.toString());
-            String report = readFile(htmlFilePath);
-            boolean deleted_temp = mdTempFile.delete();
-            if (!deleted_temp) {
-                throw new FileNotFoundException("Temp file not found");
-            }
-            return report;
-        } catch (Exception e) {
-            log.error("Not able to generate report ", e);
-            e.printStackTrace();
-        }
-        return "";
-    }
-
-    private String readFile(Path filePath) {
-        try {
-                InputStream is = java.nio.file.Files.newInputStream(filePath);
-                InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-                BufferedReader br = new BufferedReader(isr);
-            return br.lines().collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-
-    private void writeToFile(File file, String data) {
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter(file,true);
-        fw.append(data);
-        fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     }

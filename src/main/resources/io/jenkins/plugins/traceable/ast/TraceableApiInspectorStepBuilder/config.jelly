@@ -1,9 +1,9 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry title="${%IdleTimeout} (in minutes)" field="idleTimeout">
+    <f:entry title="${%SpecFilePath}" field="specFilePath">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%MaxRetries}" field="maxRetries">
+    <f:entry title="${%ChecksFilePath}" field="checksFilePath">
         <f:textbox />
     </f:entry>
 </j:jelly>

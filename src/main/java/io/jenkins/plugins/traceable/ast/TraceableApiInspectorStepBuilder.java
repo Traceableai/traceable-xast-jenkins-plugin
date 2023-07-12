@@ -17,7 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,231 +30,46 @@ import java.util.Scanner;
 import java.util.UUID;
 
 @Slf4j
-public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildStep {
-
-    private String scanName;
-    private String testEnvironment;
-    private static String clientToken;
-    private String pluginsList;
-    private String policyName;
-    private String scanEvalCriteria;
-    private String openApiSpecIds;
-    private String openApiSpecFiles;
-    private String postmanCollection;
-    private String postmanEnvironment;
-    private String pluginsToInclude;
-    private Boolean selectedInstallCli;
-    private Boolean selectedUseInstalledCli;
-    private static Boolean selectedLocalCliEnvironment;
-    private static String traceableCliBinaryLocation;
-    private String includeUrlRegex;
-    private String excludeUrlRegex;
-    private String targetUrl;
-    private String traceableServer;
-    private String scanTimeout;
-    private static String scanId;
-    private static Boolean scanEnded;
-    private String referenceEnv;
-    private static String traceableRootCaFileName;
-    private static String traceableCliCertFileName;
-    private static String traceableCliKeyFileName;
+public class TraceableApiInspectorStepBuilder extends Builder implements SimpleBuildStep {
 
 
-    public String getScanName() { return scanName; }
-    public String getTestEnvironment() { return testEnvironment; }
-    public static String getClientToken() { return clientToken; }
-    public Boolean getSelectedInstallCli() { return selectedInstallCli; }
-    public Boolean getSelectedUseInstalledCli() { return  selectedUseInstalledCli; }
-    public static Boolean getSelectedLocalCliEnvironment() { return selectedLocalCliEnvironment; }
-    public static String getTraceableCliBinaryLocation() { return traceableCliBinaryLocation; }
-    public String getPluginsToInclude() { return pluginsToInclude; }
-    public String getIncludeUrlRegex() { return includeUrlRegex; }
-    public String getExcludeUrlRegex() { return excludeUrlRegex; }
-    public String getTargetUrl() { return targetUrl; }
-    public String getTraceableServer() { return traceableServer; }
-    public String getScanTimeout() { return scanTimeout; }
-    public static String getScanId() { return scanId; }
-    public static Boolean getScanEnded() { return scanEnded; }
-    public String getReferenceEnv() { return referenceEnv; }
-    public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
-    public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
-    public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
+    private String specFilePath;
 
-    public String getScanEvalCriteria() { return scanEvalCriteria; }
+    private String checksFilePath;
+    private String report ;
 
-    public String getPostmanEnvironment() { return postmanEnvironment; }
+    public String getSpecFilePath() {
+        return specFilePath;
+    }
 
-    public String getPostmanCollection() { return postmanCollection; }
+    public String getChecksFilePath() {
+        return checksFilePath;
+    }
 
-    public String getOpenApiSpecFiles() { return openApiSpecFiles; }
+    @DataBoundSetter
+    public void setSpecFilePath(String specFilePath) {
+        this.specFilePath = specFilePath;
+    }
 
-    public String getOpenApiSpecIds() { return openApiSpecIds; }
-
-    public String getPolicyName() { return policyName; }
+    @DataBoundSetter
+    public void setChecksFilePath(String checksFilePath) {
+        this.checksFilePath = checksFilePath;
+    }
 
     @DataBoundConstructor
-    public TraceableASTInitStepBuilder() {
-        traceableCliBinaryLocation = null;
-        selectedLocalCliEnvironment = true;
+    public TraceableApiInspectorStepBuilder() {
     }
 
-    @DataBoundSetter
-    public void setScanName(String scanName) { this.scanName = scanName; }
-
-    @DataBoundSetter
-    public void setTestEnvironment(String testEnvironment) { this.testEnvironment = testEnvironment; }
-
-    @DataBoundSetter
-    public static void setClientToken(String clientToken) { TraceableASTInitStepBuilder.clientToken = clientToken; }
-    @DataBoundSetter
-    public void setSelectedInstallCli(Boolean selectedInstallCli) {
-        this.selectedInstallCli = selectedInstallCli;
-    }
-
-    @DataBoundSetter
-    public void setSelectedUseInstalledCli(Boolean selectedUseInstalledCli) {
-        this.selectedUseInstalledCli = selectedUseInstalledCli;
-    }
-    @DataBoundSetter
-    public static void setSelectedLocalCliEnvironment(Boolean selectedLocalCliEnvironment) {
-        TraceableASTInitStepBuilder.selectedLocalCliEnvironment = selectedLocalCliEnvironment;
-    }
-
-    @DataBoundSetter
-    public static void setTraceableCliBinaryLocation(String traceableCliBinaryLocation) {
-        TraceableASTInitStepBuilder.traceableCliBinaryLocation = traceableCliBinaryLocation;
-    }
-
-    @DataBoundSetter
-    public void setPluginsToInclude(String pluginsToInclude) { this.pluginsToInclude = pluginsToInclude; }
-
-    @DataBoundSetter
-    public void setIncludeUrlRegex(String includeUrlRegex) { this.includeUrlRegex = includeUrlRegex; }
-
-    @DataBoundSetter
-    public void setExcludeUrlRegex(String excludeUrlRegex) { this.excludeUrlRegex = excludeUrlRegex; }
-
-    @DataBoundSetter
-    public void setTargetUrl(String targetUrl) { this.targetUrl = targetUrl; }
-
-    @DataBoundSetter
-    public void setTraceableServer(String traceableServer) { this.traceableServer = traceableServer; }
-
-    @DataBoundSetter
-    public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
-
-    @DataBoundSetter
-    public void setReferenceEnv(String referenceEnv) { this.referenceEnv = referenceEnv;}
-
-    @DataBoundSetter
-    public static void setTraceableRootCaFileName(String traceableRootCaFileName) {
-        TraceableASTInitStepBuilder.traceableRootCaFileName = traceableRootCaFileName;
-    }
-
-    @DataBoundSetter
-    public static void setTraceableCliCertFileName(String traceableCliCertFileName) {
-        TraceableASTInitStepBuilder.traceableCliCertFileName = traceableCliCertFileName;
-    }
-
-    @DataBoundSetter
-    public static void setTraceableCliKeyFileName(String traceableCliKeyFileName) {
-        TraceableASTInitStepBuilder.traceableCliKeyFileName = traceableCliKeyFileName;
-    }
-
-    @DataBoundSetter
-    public void setScanEvalCriteria(String scanEvalCriteria) {
-        this.scanEvalCriteria = scanEvalCriteria;
-    }
-
-    @DataBoundSetter
-    public void setPostmanEnvironment(String postmanEnvironment) {
-        this.postmanEnvironment = postmanEnvironment;
-    }
-
-    @DataBoundSetter
-    public void setPostmanCollection(String postmanCollection) {
-        this.postmanCollection = postmanCollection;
-    }
-
-    @DataBoundSetter
-    public void setOpenApiSpecIds(String openApiSpecIds) {
-        this.openApiSpecIds = openApiSpecIds;
-    }
-
-    @DataBoundSetter
-    public void setOpenApiSpecFiles(String openApiSpecFiles) {
-        this.openApiSpecFiles = openApiSpecFiles;
-    }
-
-    public static void setScanId(String scanId) {
-        TraceableASTInitStepBuilder.scanId = scanId;
-    }
-    public static void setScanEnded(Boolean scanEnded) {
-        TraceableASTInitStepBuilder.scanEnded = scanEnded;
-    }
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        scanEnded = false;
-        TraceableASTInitAndRunStepBuilder.setClientToken(null);
-        if (traceableCliBinaryLocation == null || traceableCliBinaryLocation.equals("")) {
-          downloadTraceableCliBinary(listener);
-        }
-        initScan(listener, run);
-    }
-
-    // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) {
-        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[]{};
-        runScript(script_path, args, listener);
-         traceableCliBinaryLocation = "./traceable";
-    }
-
-    // Run the scan.
-    private void initScan( TaskListener listener, Run<?, ?> run ){
-        String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
-        try {
-            String home = System.getProperty("user.home");
-            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable"));
-
-            // Creating an instance of file
-            Path path = Paths.get(home , "/.traceable/config.yaml");
-            byte[] arr = configFile.getBytes();
-
-            // Write the string to file
-            java.nio.file.Files.write(path, arr);
-        } catch (IOException e) {
-            log.error("Error writing to config.yaml the config: {}", configFile);
-            throw new RuntimeException(e);
-        }
-        String scriptPath = "shell_scripts/init_ast_scan.sh";
-        String[] args =
-                new String[] {
-                        selectedLocalCliEnvironment.toString(),
-                        traceableCliBinaryLocation,
-                        scanName,
-                        testEnvironment,
-                        clientToken,
-                        policyName,
-                        pluginsToInclude,
-                        includeUrlRegex,
-                        excludeUrlRegex,
-                        targetUrl,
-                        traceableServer,
-                        scanTimeout,
-                        run.getId(),
-                        run.getUrl(),
-                        referenceEnv,
-                        openApiSpecIds,
-                        openApiSpecFiles,
-                        postmanCollection,
-                        postmanEnvironment,
-                        traceableRootCaFileName,
-                        traceableCliCertFileName,
-                        traceableCliKeyFileName
-                };
-        runScript(scriptPath, args, listener);
+        report = "";
+        String scriptPath = "shell_scripts/api_inspector.sh";
+        String[] args = new String[]{
+                specFilePath, checksFilePath
+        };
+        runScript(scriptPath , args, listener);
+        run.addAction(new TraceableApiInspectorReportAction(report));
     }
 
     private void runScript(String scriptPath, String[] args, TaskListener listener) {
@@ -290,6 +110,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             while (scanner.hasNextLine()) {
                 synchronized (this) {
                     String line = scanner.nextLine();
+                    report += line + "\n";
                     listener.getLogger().println(prefix + line);
                 }
             }
@@ -300,7 +121,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private String STEP_NAME = "Traceable AST - Initialize";
+        private String STEP_NAME = "Traceable API Inspector";
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
