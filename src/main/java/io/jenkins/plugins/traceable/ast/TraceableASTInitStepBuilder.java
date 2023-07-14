@@ -30,7 +30,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String scanName;
     private String testEnvironment;
     private static String clientToken;
-    private String pluginsList;
     private String policyName;
     private String scanEvalCriteria;
     private String openApiSpecIds;
@@ -38,29 +37,27 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String postmanCollection;
     private String postmanEnvironment;
     private String pluginsToInclude;
-    private Boolean selectedInstallCli;
-    private Boolean selectedUseInstalledCli;
-    private static Boolean selectedLocalCliEnvironment;
+    private String cliSource;
+    private String cliField;
     private static String traceableCliBinaryLocation;
     private String includeUrlRegex;
     private String excludeUrlRegex;
     private String targetUrl;
     private String traceableServer;
     private String scanTimeout;
-    private static String scanId;
     private static Boolean scanEnded;
     private String referenceEnv;
     private static String traceableRootCaFileName;
     private static String traceableCliCertFileName;
     private static String traceableCliKeyFileName;
+    private String workspacePathString;
+
+    private static String configPathString;
 
 
     public String getScanName() { return scanName; }
     public String getTestEnvironment() { return testEnvironment; }
     public static String getClientToken() { return clientToken; }
-    public Boolean getSelectedInstallCli() { return selectedInstallCli; }
-    public Boolean getSelectedUseInstalledCli() { return  selectedUseInstalledCli; }
-    public static Boolean getSelectedLocalCliEnvironment() { return selectedLocalCliEnvironment; }
     public static String getTraceableCliBinaryLocation() { return traceableCliBinaryLocation; }
     public String getPluginsToInclude() { return pluginsToInclude; }
     public String getIncludeUrlRegex() { return includeUrlRegex; }
@@ -68,7 +65,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public String getTargetUrl() { return targetUrl; }
     public String getTraceableServer() { return traceableServer; }
     public String getScanTimeout() { return scanTimeout; }
-    public static String getScanId() { return scanId; }
     public static Boolean getScanEnded() { return scanEnded; }
     public String getReferenceEnv() { return referenceEnv; }
     public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
@@ -87,12 +83,27 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     public String getPolicyName() { return policyName; }
 
+    public String getCliSource() {
+        return cliSource;
+    }
+
+    public String getCliField() {
+        return cliField;
+    }
+
+
     @DataBoundConstructor
     public TraceableASTInitStepBuilder() {
         traceableCliBinaryLocation = null;
-        selectedLocalCliEnvironment = true;
     }
-
+    @DataBoundSetter
+    public void setCliSource(String cliSource) {
+        this.cliSource = cliSource;
+    }
+    @DataBoundSetter
+    public void setCliField(String cliField) {
+        this.cliField = cliField;
+    }
     @DataBoundSetter
     public void setScanName(String scanName) { this.scanName = scanName; }
 
@@ -101,19 +112,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     @DataBoundSetter
     public static void setClientToken(String clientToken) { TraceableASTInitStepBuilder.clientToken = clientToken; }
-    @DataBoundSetter
-    public void setSelectedInstallCli(Boolean selectedInstallCli) {
-        this.selectedInstallCli = selectedInstallCli;
-    }
-
-    @DataBoundSetter
-    public void setSelectedUseInstalledCli(Boolean selectedUseInstalledCli) {
-        this.selectedUseInstalledCli = selectedUseInstalledCli;
-    }
-    @DataBoundSetter
-    public static void setSelectedLocalCliEnvironment(Boolean selectedLocalCliEnvironment) {
-        TraceableASTInitStepBuilder.selectedLocalCliEnvironment = selectedLocalCliEnvironment;
-    }
 
     @DataBoundSetter
     public static void setTraceableCliBinaryLocation(String traceableCliBinaryLocation) {
@@ -181,8 +179,8 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         this.openApiSpecFiles = openApiSpecFiles;
     }
 
-    public static void setScanId(String scanId) {
-        TraceableASTInitStepBuilder.scanId = scanId;
+    public static String getConfigPathString() {
+        return configPathString;
     }
     public static void setScanEnded(Boolean scanEnded) {
         TraceableASTInitStepBuilder.scanEnded = scanEnded;
@@ -190,35 +188,47 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        workspacePathString = workspace.getRemote();
         scanEnded = false;
         TraceableASTInitAndRunStepBuilder.setClientToken(null);
-        if (traceableCliBinaryLocation == null || traceableCliBinaryLocation.equals("")) {
-          downloadTraceableCliBinary(listener);
+
+        if (cliSource.equals("download")) {
+            downloadTraceableCliBinary(listener);
+        } else if(cliSource.equals("localpath")) {
+            if(cliField == null || cliField.equals("")) {
+                throw new InterruptedException("Location of traceable cli binary not provided.");
+            } else {
+                traceableCliBinaryLocation = cliField;
+            }
         }
+
         initScan(listener, run);
     }
 
     // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) {
+    private void downloadTraceableCliBinary(TaskListener listener) throws IOException, InterruptedException {
         String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[]{};
-        runScript(script_path, args, listener);
-         traceableCliBinaryLocation = "./traceable";
+        String[] args = new String[]{
+                workspacePathString,
+                cliField
+        };
+        runScript(script_path, args, listener, "downloadTraceableCliBinary");
+        traceableCliBinaryLocation = workspacePathString + "/traceable";
     }
 
     // Run the scan.
     private void initScan( TaskListener listener, Run<?, ?> run ){
         String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
+        Path configPath = null;
         try {
-            String home = System.getProperty("user.home");
-            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable"));
 
             // Creating an instance of file
-            Path path = Paths.get(home , "/.traceable/config.yaml");
+            configPath = Paths.get(workspacePathString , "/config.yaml");
+            configPathString = configPath.toString();
             byte[] arr = configFile.getBytes();
 
             // Write the string to file
-            java.nio.file.Files.write(path, arr);
+            java.nio.file.Files.write(configPath, arr);
         } catch (IOException e) {
             log.error("Error writing to config.yaml the config: {}", configFile);
             throw new RuntimeException(e);
@@ -226,7 +236,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         String scriptPath = "shell_scripts/init_ast_scan.sh";
         String[] args =
                 new String[] {
-                        selectedLocalCliEnvironment.toString(),
                         traceableCliBinaryLocation,
                         scanName,
                         testEnvironment,
@@ -247,31 +256,34 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                         postmanEnvironment,
                         traceableRootCaFileName,
                         traceableCliCertFileName,
-                        traceableCliKeyFileName
+                        traceableCliKeyFileName,
+                        configPathString
                 };
-        runScript(scriptPath, args, listener);
+        runScript(scriptPath, args, listener, "runAndInitScan");
     }
 
-    private void runScript(String scriptPath, String[] args, TaskListener listener) {
+    private void runScript(String scriptPath, String[] args, TaskListener listener,  String caller) {
         try{
             // Read the bundled script as string
             String bundledScript = CharStreams.toString(
-                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), StandardCharsets.UTF_8));
+                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
             // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile("script_" + scriptPath.replaceAll(".sh", "")+ "_" + UUID.randomUUID().toString(), ".sh");
+            File tempFile = File.createTempFile("script_" + scriptPath.replaceAll(".sh","") +"_"+ UUID.randomUUID().toString(), ".sh");
             // Write the string to temp file
-            BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
+            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile,  Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
+            String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
             for(int i=0;i<args.length;i++) {
                 if(args[i]!=null && !args[i].equals(""))
-                    execScript.append(" ").append(args[i]);
-                else execScript.append(" ''");
+                    execScript = new StringBuffer().append(execScript).append(" ").append(args[i]).toString();
+                else execScript = new StringBuffer().append(execScript).append(" ''").toString();
             }
-            Process pb = Runtime.getRuntime().exec(execScript.toString());
-            logOutput(pb.getInputStream(), "",listener);
-            logOutput(pb.getErrorStream(), "Error: ",listener);
+            Process pb = Runtime.getRuntime().exec(execScript);
+            logOutput(pb.getInputStream(), "", listener);
+            if(!caller.equals("downloadTraceableCliBinary")) {
+                logOutput(pb.getErrorStream(), "Error: ", listener);
+            }
             pb.waitFor();
             boolean deleted_temp = tempFile.delete();
             if(!deleted_temp) {

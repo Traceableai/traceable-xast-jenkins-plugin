@@ -2,29 +2,29 @@
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
 dockerEnv=''
+if  [[ -n ${19} ]] && [[ ${19} != "''" ]]
+then
+  export TRACEABLE_ROOT_CA_FILE_NAME=${19}
+  dockerEnv=$dockerEnv' --env TRACEABLE_ROOT_CA_FILE_NAME '
+fi
 if  [[ -n ${20} ]] && [[ ${20} != "''" ]]
 then
-  export TRACEABLE_ROOT_CA_FILE_NAME=${20}
-  dockerEnv=$dockerEnv' --env TRACEABLE_ROOT_CA_FILE_NAME '
+  export TRACEABLE_CLI_CERT_FILE_NAME=${20}
+  dockerEnv=$dockerEnv' --env TRACEABLE_CLI_CERT_FILE_NAME '
 fi
 if  [[ -n ${21} ]] && [[ ${21} != "''" ]]
 then
-  export TRACEABLE_CLI_CERT_FILE_NAME=${21}
-  dockerEnv=$dockerEnv' --env TRACEABLE_CLI_CERT_FILE_NAME '
-fi
-if  [[ -n ${22} ]] && [[ ${22} != "''" ]]
-then
-  export TRACEABLE_CLI_KEY_FILE_NAME=${22}
+  export TRACEABLE_CLI_KEY_FILE_NAME=${21}
   dockerEnv=$dockerEnv' --env TRACEABLE_CLI_KEY_FILE_NAME '
 fi
 
-setLocalCli=$1
-traceableCliBinaryLocation=$2
+#setLocalCli=$1
+traceableCliBinaryLocation=$1
 
-if [ "$setLocalCli" = false ]
-then
-  traceableCliBinaryLocation="docker run -v $HOME/.traceable:/app/userdata "$dockerEnv$traceableCliBinaryLocation
-fi
+#if [ "$setLocalCli" = false ]
+#then
+#  traceableCliBinaryLocation="docker run -v $HOME/.traceable:/app/userdata "$dockerEnv$traceableCliBinaryLocation
+#fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan init'
 optionsArr=('--scan-name' '--traffic-env' '--token' '--policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--scan-timeout' '--build-id' '--build-url' ' --reference-env' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment')
@@ -32,7 +32,7 @@ stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:3:17}"
+for option in "${@:2:17}"
 do
   if [ -z "$option" ] || [ "$option" = "''" ]
   then
@@ -55,6 +55,11 @@ do
   fi
   iterator=$(($iterator+1))
 done
+
+if [ -z "${22}" ] || [ "${22}" = "''" ]
+then
+  scanInitCmd=$scanInitCmd" --config-file "${22}
+fi
 
 # Run the command
 eval "$scanInitCmd"

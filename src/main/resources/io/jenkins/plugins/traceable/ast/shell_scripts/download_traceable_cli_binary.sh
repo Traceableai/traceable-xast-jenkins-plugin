@@ -2,7 +2,9 @@
 
 export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
-version=${1}
+
+cd ${1}
+version=${2}
 
 if [[ "$version"  = *"-rc."* ]]
 then

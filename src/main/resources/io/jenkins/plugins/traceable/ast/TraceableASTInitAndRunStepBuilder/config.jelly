@@ -7,32 +7,19 @@
     <f:entry title="${%TestEnvironment} *">
         <f:textbox field="testEnvironment"/>
     </f:entry>
+    <f:block>
     <f:entry title="${%ClientToken} *">
         <f:password field="clientToken"/>
     </f:entry>
-    <f:block>
-        <table>
-            <f:optionalBlock name="selectedInstallCli" title="${%InstallCli}"  inline="true" checked="true">
-                <f:entry></f:entry>
-                <f:entry title="${%CliVersion}" description="(Installs latest CLI version by default, if nothing provided)">
-                    <f:textbox field="cliVersion"/>
-                </f:entry>
-            </f:optionalBlock>
-        </table>
-    </f:block>
-    <f:block>
-        <table>
-            <f:optionalBlock name="selectedUseInstalledCli" title="${%UseInstalledCli}"  inline="true" >
-                <f:entry></f:entry>
-                <f:entry title="${%CliRunEnvironment}">
-                    <div>
-                        <f:radio title="${%TraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="true" checked="${instance == null || instance.selectedLocalCliEnvironment == true}"/>
-                        <f:radio title="${%DockerTraceableCliBinaryLocation}" name="selectedLocalCliEnvironment" value="false" checked="${instance.selectedLocalCliEnvironment == false}"/>
-                    </div>
-                    <f:textbox field="traceableCliBinaryLocation"/>
-                </f:entry>
-            </f:optionalBlock>
-        </table>
+    <f:entry name="cliSource" title="${%CliSource}" field="cliSource">
+        <select name="cliSource">
+            <option value="download" selected="${instance.cliSource.equals('download') || $instance.cliSource.equals(null)? 'true':null}">   Download cli (specify the version, by default latest cli will be downloaded   </option>
+            <option value="localpath" selected="${instance.cliSource.equals('localpath')? 'true':null}">   Give the local absolute path of cli binary   </option>
+        </select>
+    </f:entry>
+        <f:entry>
+            <f:textbox field="cliField"/>
+        </f:entry>
     </f:block>
     <f:entry></f:entry>
     <f:entry title="${%PolicyName}">
@@ -42,7 +29,7 @@
         <f:textarea field="scanEvalCriteria"/>
     </f:entry>
     <f:advanced>
-        <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable-ast/field-help/Plugins.html">
+        <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable/field-help/Plugins.html">
             <f:textbox field="pluginsToInclude"/>
         </f:entry>
         <f:entry title="${%IncludeUrlRegex}" field="includeUrlRegex">

@@ -41,7 +41,6 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
             }
             if(TraceableASTInitAndRunStepBuilder.getScanId() == null) { return; }
             run.addAction(new TraceableASTGenerateReportAction(
-                    TraceableASTInitAndRunStepBuilder.getSelectedLocalCliEnvironment(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliBinaryLocation(),
                     TraceableASTInitAndRunStepBuilder.getScanId(),
                     clientToken,
@@ -51,11 +50,10 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
         }
         else if(TraceableASTInitStepBuilder.getClientToken() != null) {
             while (TraceableASTInitStepBuilder.getScanEnded() == null || !TraceableASTInitStepBuilder.getScanEnded()) {}
-            if(TraceableASTInitStepBuilder.getScanId() == null) { return; }
+            if(TraceableASTRunStepBuilder.getScanId() == null) { return; }
             run.addAction(new TraceableASTGenerateReportAction(
-                    TraceableASTInitStepBuilder.getSelectedLocalCliEnvironment(),
                     TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
-                    TraceableASTInitStepBuilder.getScanId(),
+                    TraceableASTRunStepBuilder.getScanId(),
                     clientToken,
                     TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitStepBuilder.getTraceableCliCertFileName(),

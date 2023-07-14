@@ -24,9 +24,13 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
 
     private String idleTimeout;
     private String maxRetries;
+    private static String scanId;
 
     public String getIdleTimeout() { return idleTimeout; }
     public String getMaxRetries() { return maxRetries; }
+    public static String getScanId() {
+        return scanId;
+    }
 
     @DataBoundConstructor
     public TraceableASTRunStepBuilder() {}
@@ -36,21 +40,17 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
 
     @DataBoundSetter
     public void setMaxRetries(String maxRetries) { this.maxRetries = maxRetries; }
+    public static void setScanId(String scanId) {
+        TraceableASTRunStepBuilder.scanId = scanId;
+    }
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         runScan(listener, run);
-        if (TraceableASTInitStepBuilder.getScanId() != null) {
+        if (scanId != null) {
             abortScan(listener);
         }
         TraceableASTInitStepBuilder.setScanEnded(true);
-    }
-
-    // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) {
-        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[]{};
-        runScript(script_path, args, listener, "downloadTraceableCliBinary");
     }
 
     // Run the scan.
@@ -58,14 +58,14 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
         String scriptPath = "shell_scripts/run_ast_scan.sh";
         String[] args =
                 new String[] {
-                        TraceableASTInitStepBuilder.getSelectedLocalCliEnvironment().toString(),
                         TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
                         TraceableASTInitStepBuilder.getClientToken(),
                         idleTimeout,
                         maxRetries,
                         TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                         TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
-                        TraceableASTInitStepBuilder.getTraceableCliKeyFileName()
+                        TraceableASTInitStepBuilder.getTraceableCliKeyFileName(),
+                        TraceableASTInitStepBuilder.getConfigPathString()
                 };
         runScript(scriptPath, args, listener, "runScan");
     }
@@ -74,9 +74,8 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     private void abortScan(TaskListener listener) {
         String scriptPath = "shell_scripts/stop_ast_scan.sh";
         String[] args = new String[]{
-                TraceableASTInitStepBuilder.getTraceableCliBinaryLocation().toString(),
                 TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
-                TraceableASTInitStepBuilder.getScanId()
+                scanId
         };
         runScript(scriptPath, args, listener, "abortScan");
     }
@@ -123,7 +122,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
                   // Extract the scan ID from the cli output of scan init command.
                   if (prefix.equals("") && line.contains("Running scan with ID")) {
                     String[] tokens = line.split(" ");
-                    TraceableASTInitStepBuilder.setScanId(tokens[tokens.length - 1].substring(0,36));
+                    setScanId(tokens[tokens.length - 1].substring(0,36));
                   }
                   if (!caller.equals("abortScan")) {
                     listener.getLogger().println(prefix + line);

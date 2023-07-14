@@ -23,8 +23,6 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 
     private String htmlReport;
     private transient Run run;
-
-    private Boolean selectedLocalCliEnvironment;
     private String traceableCliBinaryLocation;
     private String scanId;
     private String clientToken;
@@ -32,8 +30,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private String traceableCliCertFileName;
     private String traceableCliKeyFileName;
 
-    public TraceableASTGenerateReportAction(Boolean selectedLocalCliEnvironment, String traceableCliBinaryLocation, String scanId, String clientToken, String traceableRootCaFileName, String traceableCliCertFileName, String traceableCliKeyFileName) {
-        this.selectedLocalCliEnvironment = selectedLocalCliEnvironment;
+    public TraceableASTGenerateReportAction( String traceableCliBinaryLocation, String scanId, String clientToken, String traceableRootCaFileName, String traceableCliCertFileName, String traceableCliKeyFileName) {
         this.traceableCliBinaryLocation = traceableCliBinaryLocation;
         this.scanId = scanId;
         this.clientToken = clientToken;
@@ -49,7 +46,6 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         String[] args = null;
             args =
                     new String[] {
-                            selectedLocalCliEnvironment.toString(),
                             traceableCliBinaryLocation,
                             scanId,
                             clientToken,
@@ -83,11 +79,10 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 //            logOutput(pb.getErrorStream());
             pb.waitFor();
             int reportCmdExitValue = pb.exitValue();
-
-            if(reportCmdExitValue != 0) {
+            boolean deleted_temp = tempFile.delete();
+            if(reportCmdExitValue == 4) {
                 run.setResult(Result.FAILURE);
             }
-            boolean deleted_temp = tempFile.delete();
             if(!deleted_temp) {
                 throw new FileNotFoundException("Temp file not found");
             }
@@ -127,6 +122,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
             while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     report.append(line).append("\n");
+                    System.out.println(line);
             }
             scanner.close();
             Pattern REPORT_PATTERN = Pattern.compile("<.*",Pattern.DOTALL);
