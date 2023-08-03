@@ -4,7 +4,7 @@
     <f:entry title="${%ScanName}">
         <f:textbox field="scanName"/>
     </f:entry>
-    <f:entry title="${%TestEnvironment} *">
+    <f:entry title="${%TestEnvironment} ">
         <f:textbox field="testEnvironment"/>
     </f:entry>
     <f:block>
