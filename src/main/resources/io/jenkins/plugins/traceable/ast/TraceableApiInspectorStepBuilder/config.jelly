@@ -3,6 +3,9 @@
     <f:entry title="${%SpecFilePath}" field="specFilePath">
         <f:textbox />
     </f:entry>
+    <f:entry title="${%RepoPath}" field="repoPath">
+        <f:textbox />
+    </f:entry>
     <f:entry title="${%ChecksFilePath}" field="checksFilePath">
         <f:textbox />
     </f:entry>

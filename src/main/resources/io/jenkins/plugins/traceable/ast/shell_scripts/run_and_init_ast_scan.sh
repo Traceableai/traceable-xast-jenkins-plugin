@@ -25,7 +25,7 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--build-id' '--build-url' '--reference-env' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--build-id' '--build-url' '--reference-env' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--traceable-platform-agent')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
