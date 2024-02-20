@@ -55,6 +55,8 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private static String traceableCliKeyFileName;
     private String workspacePathString;
 
+    private String suiteName;
+
     public String getScanName() { return scanName; }
     public String getTestEnvironment() { return testEnvironment; }
     public static String getClientToken() { return clientToken; }
@@ -92,6 +94,10 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     public String getCliField() {
         return cliField;
+    }
+
+    public String getSuiteName() {
+        return suiteName;
     }
 
     @DataBoundConstructor
@@ -194,6 +200,11 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         this.policyName = policyName;
     }
 
+    @DataBoundSetter
+    public void setSuiteName(String suiteName) {
+        this.suiteName = suiteName;
+    }
+
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
@@ -276,6 +287,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             traceableRootCaFileName,
             traceableCliCertFileName,
             traceableCliKeyFileName,
+            suiteName,
             configPath.toString()
           };
         runScript(scriptPath, args, listener, "runAndInitScan");

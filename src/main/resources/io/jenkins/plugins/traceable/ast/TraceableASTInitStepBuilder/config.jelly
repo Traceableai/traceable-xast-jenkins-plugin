@@ -25,6 +25,9 @@
     <f:entry title="${%PolicyName}">
         <f:textbox/>
     </f:entry>
+    <f:entry title="${%SuiteName}">
+        <f:textbox field="suiteName"/>
+    </f:entry>
     <f:entry title="${%ScanEvalCriteria}">
         <f:textarea field="scanEvalCriteria" />
     </f:entry>

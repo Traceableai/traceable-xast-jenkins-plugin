@@ -52,6 +52,8 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private static String traceableCliKeyFileName;
     private String workspacePathString;
 
+    private String suiteName;
+
     private static String configPathString;
 
 
@@ -89,6 +91,10 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     public String getCliField() {
         return cliField;
+    }
+
+    public String getSuiteName(){
+        return suiteName;
     }
 
 
@@ -179,6 +185,11 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         this.openApiSpecFiles = openApiSpecFiles;
     }
 
+    @DataBoundSetter
+    public void setSuiteName(String suiteName) {
+        this.suiteName = suiteName;
+    }
+
     public static String getConfigPathString() {
         return configPathString;
     }
@@ -257,7 +268,8 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                         traceableRootCaFileName,
                         traceableCliCertFileName,
                         traceableCliKeyFileName,
-                        configPathString
+                        configPathString,
+                        suiteName
                 };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }
