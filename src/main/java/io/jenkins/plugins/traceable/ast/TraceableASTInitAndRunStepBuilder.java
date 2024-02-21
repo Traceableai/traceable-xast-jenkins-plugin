@@ -30,7 +30,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private String scanName;
     private String testEnvironment;
     private static String clientToken;
-    private String policyName;
+    private String attackPolicy;
     private String scanEvalCriteria;
     private String openApiSpecIds;
     private String openApiSpecFiles;
@@ -56,6 +56,18 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private String workspacePathString;
 
     private String suiteName;
+
+    private Boolean shouldUploadLogs;
+
+    private String includeEndpointLabels;
+
+    private String includeEndpointIds;
+
+    private String includeServiceIds;
+
+    private Boolean includeAllEndpoints;
+
+    private String hookName;
 
     public String getScanName() { return scanName; }
     public String getTestEnvironment() { return testEnvironment; }
@@ -86,7 +98,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     public String getOpenApiSpecIds() { return openApiSpecIds; }
 
-    public String getPolicyName() { return policyName; }
+    public String getAttackpolicy() { return attackPolicy; }
 
     public String getCliSource() {
         return cliSource;
@@ -98,6 +110,30 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     public String getSuiteName() {
         return suiteName;
+    }
+
+    public Boolean getShouldUploadLogs() {
+        return shouldUploadLogs;
+    }
+
+    public String getIncludeEndpointLabels() {
+        return includeEndpointLabels;
+    }
+
+    public String getIncludeEndpointIds() {
+        return includeEndpointIds;
+    }
+
+    public String getIncludeServiceIds() {
+        return includeServiceIds;
+    }
+
+    public Boolean getIncludeAllEndpoints() {
+        return includeAllEndpoints;
+    }
+
+    public String getHookName() {
+        return hookName;
     }
 
     @DataBoundConstructor
@@ -196,13 +232,43 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     @DataBoundSetter
-    public void setPolicyName(String policyName) {
-        this.policyName = policyName;
+    public void setAttackPolicy(String attackPolicy) {
+        this.attackPolicy = attackPolicy;
     }
 
     @DataBoundSetter
     public void setSuiteName(String suiteName) {
         this.suiteName = suiteName;
+    }
+
+    @DataBoundSetter
+    public void setShouldUploadLogs(Boolean shouldUploadLogs) {
+        this.shouldUploadLogs = shouldUploadLogs;
+    }
+
+    @DataBoundSetter
+    public void setIncludeEndpointLabels(String includeEndpointLabels) {
+        this.includeEndpointLabels = includeEndpointLabels;
+    }
+
+    @DataBoundSetter
+    public void setIncludeEndpointIds(String includeEndpointIds) {
+        this.includeEndpointIds = includeEndpointIds;
+    }
+
+    @DataBoundSetter
+    public void setIncludeServiceIds(String includeServiceIds) {
+        this.includeServiceIds = includeServiceIds;
+    }
+
+    @DataBoundSetter
+    public void setIncludeAllEndpoints(Boolean includeAllEndpoints) {
+        this.includeAllEndpoints = includeAllEndpoints;
+    }
+
+    @DataBoundSetter
+    public void setHookName(String hookName) {
+        this.hookName = hookName;
     }
 
 
@@ -255,7 +321,9 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         configPath = Paths.get(workspacePathString , "/config.yaml");
         byte[] arr = configFile.getBytes();
 
-        // Write the string to file
+        String includeAllEndpointsOption = includeAllEndpoints ? "--include-all-endpoints" : null;
+
+            // Write the string to file
             java.nio.file.Files.write(configPath, arr);
         } catch (IOException e) {
             log.error("Error writing to config.yaml the config: {}", configFile);
@@ -265,10 +333,13 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         String[] args =
           new String[] {
             traceableCliBinaryLocation,
+            traceableRootCaFileName,
+            traceableCliCertFileName,
+            traceableCliKeyFileName,
             scanName,
             testEnvironment,
             clientToken,
-            policyName,
+            attackPolicy,
             pluginsToInclude,
             includeUrlRegex,
             excludeUrlRegex,
@@ -276,18 +347,16 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             traceableServer,
             idleTimeout,
             scanTimeout,
-            run.getId(),
-            run.getUrl(),
-            referenceEnv,
             maxRetries,
             openApiSpecIds,
             openApiSpecFiles,
             postmanCollection,
             postmanEnvironment,
-            traceableRootCaFileName,
-            traceableCliCertFileName,
-            traceableCliKeyFileName,
             suiteName,
+            includeServiceIds,
+            includeEndpointIds,
+            includeEndpointLabels,
+            hookName,
             configPath.toString()
           };
         runScript(scriptPath, args, listener, "runAndInitScan");
