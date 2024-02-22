@@ -73,22 +73,22 @@
                         <f:radioBlock name="trafficType" value="xASTReplay" checked="${instance.xASTReplay}" title="${%ReplayTraffic}" />
 
                         <f:radioBlock name="trafficType" value="openApiSpecs" checked="${instance.openApiSpecIds != null || instance.openApiSpecFiles != null}" title="${%OpenApiSpecs}">
-                            <f:entry title="OpenApiSpecIds (comma separated)" field="openApiSpecIds">
-                                <f:textbox name="openApiSpecIds"/>
+                            <f:entry title="OpenApiSpecIds (comma separated)">
+                                <f:textbox field="openApiSpecIds"/>
                             </f:entry>
 
-                            <f:entry title="OpenApiSpecFiles (comma separated)" field="openApiSpecFiles">
-                                <f:textbox name="openApiSpecFiles"/>
+                            <f:entry title="OpenApiSpecFiles (comma separated)">
+                                <f:textbox field="openApiSpecFiles"/>
                             </f:entry>
                         </f:radioBlock>
 
             <f:radioBlock name="trafficType" value="postManCollection" checked="${instance.postmanCollection != null || instance.postmanEnvironment != null}" title="${%PostManCollection}">
-                <f:entry title="PostmanCollection (comma separated)" field="postmanCollection">
-                    <f:textbox name="postmanCollection"/>
+                <f:entry title="PostmanCollection (comma separated)">
+                    <f:textbox field="postmanCollection"/>
                 </f:entry>
 
-                <f:entry title="PostmanEnvironment (comma separated)" field="postmanEnvironment">
-                    <f:textbox name="postmanEnvironment"/>
+                <f:entry title="PostmanEnvironment (comma separated)">
+                    <f:textbox field="postmanEnvironment"/>
                 </f:entry>
             </f:radioBlock>
         </f:entry>
@@ -96,25 +96,25 @@
 
         <f:entry title="${%SelectAssets}">
             <f:radioBlock name="Assets" value="includeEndpointLabels" checked="${instance.includeEndpointLabels != null}" title="${%EndpointLabels}">
-                <f:entry title="Include Endpoint Labels (comma separated)" field="includeEndpointLabels">
-                    <f:textbox name="includeEndpointLabels" value="${instance.includeEndpointLabels}"/>
+                <f:entry title="Include Endpoint Labels (comma separated)">
+                    <f:textbox field="includeEndpointLabels"/>
                 </f:entry>
             </f:radioBlock>
             <f:radioBlock name="Assets" value="includeEndpointIds" checked="${instance.includeEndpointIds != null}" title="${%EndpointIds}">
-                <f:entry title="Include Endpoint IDs (comma separated)" field="includeEndpointIds">
-                    <f:textbox name="includeEndpointIds" value="${instance.includeEndpointIds}"/>
+                <f:entry title="Include Endpoint IDs (comma separated)">
+                    <f:textbox field="includeEndpointIds"/>
                 </f:entry>
             </f:radioBlock>
             <f:radioBlock name="Assets" value="includeServiceIds" checked="${instance.includeServiceIds != null}" title="${%ServiceIds}">
-                <f:entry title="Include Service IDs (comma separated)" field="includeServiceIds">
-                    <f:textbox name="includeServiceIds" value="${instance.includeServiceIds}"/>
+                <f:entry title="Include Service IDs (comma separated)">
+                    <f:textbox field="includeServiceIds"/>
                 </f:entry>
             </f:radioBlock>
             <f:radioBlock name="Assets" value="includeAllEndpoints" checked="${instance.includeAllEndpoints}" title="${%AllEndpoints}"/>
         </f:entry>
 
-        <f:entry title="${%UploadLogs}" field="shouldUploadLogs">
-            <f:checkbox name="shouldUploadLogs" checked="${instance.shouldUploadLogs}" />
+        <f:entry title="${%UploadLogs}">
+            <f:checkbox field="shouldUploadLogs" checked="${instance.shouldUploadLogs}" />
         </f:entry>
 
     </f:advanced>
