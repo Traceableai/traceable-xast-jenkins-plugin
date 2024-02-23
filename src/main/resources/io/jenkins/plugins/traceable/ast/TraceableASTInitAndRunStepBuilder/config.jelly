@@ -11,7 +11,7 @@
     <f:entry title="${%ClientToken} *">
         <f:password field="clientToken"/>
     </f:entry>
-    <f:entry name="cliSource" title="${%CliSource}" field="cliSource">
+    <f:entry title="${%CliSource}" field="cliSource">
         <select name="cliSource">
             <option value="download" selected="${instance.cliSource.equals('download') || $instance.cliSource.equals(null)? 'true':null}">   Download cli (specify the version, by default latest cli will be downloaded   </option>
             <option value="localpath" selected="${instance.cliSource.equals('localpath')? 'true':null}">   Give the local absolute path of cli binary   </option>
@@ -30,6 +30,56 @@
     <f:entry title="${%ScanEvalCriteria}">
         <f:textarea field="scanEvalCriteria"/>
     </f:entry>
+
+    <f:entry title="${%SelectAssets}" field="assets">
+        <f:radioBlock name="assets" value="AllEndpoints" checked="true" title="${%AllEndpoints}" inline="true"/>
+        <f:radioBlock name="assets" value="EndpointLabels" checked="false" title="${%EndpointLabels}" inline="true">
+            <f:entry title="Include Endpoint Labels (comma separated)">
+                <f:textbox field="includeEndpointLabels"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="EndpointIds" checked="false" title="${%EndpointIds}" inline="true">
+            <f:entry title="Include Endpoint IDs (comma separated)">
+                <f:textbox field="includeEndpointIds"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="ServiceIds" checked="false" title="${%ServiceIds}" inline="true">
+            <f:entry title="Include Service IDs (comma separated)">
+                <f:textbox field="includeServiceIds"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+    <f:entry title="${%TrafficType}" field="trafficType">
+        <f:radioBlock name="trafficType"  value="XAST_LIVE" checked="true" title="${%LiveTraffic}" inline="true"/>
+        <f:radioBlock name="trafficType" value="XAST_REPLAY" checked="false" title="${%ReplayTraffic}" inline="true"/>
+
+        <f:radioBlock name="trafficType" value="DAST_OPEN_API_SPECS" checked="false" title="${%OpenApiSpecs}" inline="true">
+            <f:entry title="OpenApiSpecIds (comma separated)">
+                <f:textbox field="openApiSpecIds"/>
+            </f:entry>
+
+            <f:entry title="OpenApiSpecFiles (comma separated)">
+                <f:textbox field="openApiSpecFiles"/>
+            </f:entry>
+        </f:radioBlock>
+
+        <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="false" title="${%PostManCollection}" inline="true">
+            <f:entry title="PostmanCollection (comma separated)">
+                <f:textbox field="postmanCollection" value="${descriptor.doCheckField(value)}"/>
+            </f:entry>
+
+            <f:entry title="PostmanEnvironment (comma separated)">
+                <f:textbox field="postmanEnvironment"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+    <f:entry field="foo">
+        <f:textbox checkMethod="post" />
+    </f:entry>
+
+
     <f:advanced>
         <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable/field-help/Plugins.html">
             <f:textbox field="pluginsToInclude"/>
@@ -66,51 +116,6 @@
         </f:entry>
         <f:entry title="${%HookName} (comma separated)">
             <f:textbox field="hookName"/>
-        </f:entry>
-
-        <f:entry title="${%TrafficType}">
-                        <f:radioBlock name="trafficType"  value="xASTLive" checked="${instance.xASTLive}" title="${%LiveTraffic}"/>
-                        <f:radioBlock name="trafficType" value="xASTReplay" checked="${instance.xASTReplay}" title="${%ReplayTraffic}" />
-
-                        <f:radioBlock name="trafficType" value="openApiSpecs" checked="${instance.openApiSpecIds != null || instance.openApiSpecFiles != null}" title="${%OpenApiSpecs}">
-                            <f:entry title="OpenApiSpecIds (comma separated)">
-                                <f:textbox field="openApiSpecIds"/>
-                            </f:entry>
-
-                            <f:entry title="OpenApiSpecFiles (comma separated)">
-                                <f:textbox field="openApiSpecFiles"/>
-                            </f:entry>
-                        </f:radioBlock>
-
-            <f:radioBlock name="trafficType" value="postManCollection" checked="${instance.postmanCollection != null || instance.postmanEnvironment != null}" title="${%PostManCollection}">
-                <f:entry title="PostmanCollection (comma separated)">
-                    <f:textbox field="postmanCollection"/>
-                </f:entry>
-
-                <f:entry title="PostmanEnvironment (comma separated)">
-                    <f:textbox field="postmanEnvironment"/>
-                </f:entry>
-            </f:radioBlock>
-        </f:entry>
-
-
-        <f:entry title="${%SelectAssets}">
-            <f:radioBlock name="Assets" value="includeEndpointLabels" checked="${instance.includeEndpointLabels != null}" title="${%EndpointLabels}">
-                <f:entry title="Include Endpoint Labels (comma separated)">
-                    <f:textbox field="includeEndpointLabels"/>
-                </f:entry>
-            </f:radioBlock>
-            <f:radioBlock name="Assets" value="includeEndpointIds" checked="${instance.includeEndpointIds != null}" title="${%EndpointIds}">
-                <f:entry title="Include Endpoint IDs (comma separated)">
-                    <f:textbox field="includeEndpointIds"/>
-                </f:entry>
-            </f:radioBlock>
-            <f:radioBlock name="Assets" value="includeServiceIds" checked="${instance.includeServiceIds != null}" title="${%ServiceIds}">
-                <f:entry title="Include Service IDs (comma separated)">
-                    <f:textbox field="includeServiceIds"/>
-                </f:entry>
-            </f:radioBlock>
-            <f:radioBlock name="Assets" value="includeAllEndpoints" checked="${instance.includeAllEndpoints}" title="${%AllEndpoints}"/>
         </f:entry>
 
         <f:entry title="${%UploadLogs}">

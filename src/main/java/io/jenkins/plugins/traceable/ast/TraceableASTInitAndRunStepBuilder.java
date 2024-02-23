@@ -1,27 +1,39 @@
 package io.jenkins.plugins.traceable.ast;
 
+import static java.util.List.of;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.FormFillFailure;
+import hudson.util.FormValidation;
+import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
+import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import javax.servlet.ServletException;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.UUID;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 
 @Slf4j
@@ -65,9 +77,26 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     private String includeServiceIds;
 
-    private Boolean includeAllEndpoints;
 
     private String hookName;
+
+    private Assets assets;
+
+    private TrafficType trafficType;
+
+    private Boolean includeAllEndPoints;
+
+    private Boolean xastLive;
+
+    private Boolean xastReplay;
+
+    public Assets getAssets(){
+        return assets;
+    }
+
+    public TrafficType getTrafficType() {
+      return trafficType;
+    }
 
     public String getScanName() { return scanName; }
     public String getTestEnvironment() { return testEnvironment; }
@@ -98,7 +127,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     public String getOpenApiSpecIds() { return openApiSpecIds; }
 
-    public String getAttackpolicy() { return attackPolicy; }
+    public String getAttackPolicy() { return attackPolicy; }
 
     public String getCliSource() {
         return cliSource;
@@ -128,17 +157,9 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         return includeServiceIds;
     }
 
-    public Boolean getIncludeAllEndpoints() {
-        return includeAllEndpoints;
-    }
 
     public String getHookName() {
         return hookName;
-    }
-
-    @DataBoundConstructor
-    public TraceableASTInitAndRunStepBuilder() {
-        traceableCliBinaryLocation = null;
     }
 
 
@@ -262,15 +283,27 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     @DataBoundSetter
-    public void setIncludeAllEndpoints(Boolean includeAllEndpoints) {
-        this.includeAllEndpoints = includeAllEndpoints;
-    }
-
-    @DataBoundSetter
     public void setHookName(String hookName) {
         this.hookName = hookName;
     }
 
+    @DataBoundSetter
+    public void setAssets(Assets assets) {
+        this.assets = assets;
+        resetOtherAssetsSelections(assets);
+    }
+
+    @DataBoundSetter
+    public void setTrafficType(TrafficType trafficType) {
+      this.trafficType = trafficType;
+    }
+
+    @DataBoundConstructor
+    public TraceableASTInitAndRunStepBuilder() {
+        traceableCliBinaryLocation = null;
+        this.includeAllEndPoints = true;
+        this.xastLive = true;
+    }
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
@@ -321,7 +354,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         configPath = Paths.get(workspacePathString , "/config.yaml");
         byte[] arr = configFile.getBytes();
 
-        String includeAllEndpointsOption = includeAllEndpoints ? "--include-all-endpoints" : null;
+            System.out.println(" postman collection " + postmanCollection);
 
             // Write the string to file
             java.nio.file.Files.write(configPath, arr);
@@ -427,6 +460,121 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
               scanner.close();
             })
         .start();
+    }
+
+    private void resetOtherAssetsSelections(Assets assets) {
+        if (assets == Assets.AllEndpoints) {
+            resetAllSelections();
+        } else {
+            this.includeAllEndPoints = false;
+            resetSelectionsExcluding(assets);
+        }
+    }
+
+    private void resetAllSelections() {
+        this.includeEndpointIds = null;
+        this.includeEndpointLabels = null;
+        this.includeServiceIds = null;
+        this.includeAllEndPoints = true;
+    }
+
+    private void resetSelectionsExcluding(Assets excludedAsset) {
+        checkAndLogErrorForAssetsSelection();
+
+        if (excludedAsset != Assets.EndpointIds) {
+            this.includeEndpointIds = null;
+        }
+        if (excludedAsset != Assets.EndpointLabels) {
+            this.includeEndpointLabels = null;
+        }
+        if (excludedAsset != Assets.ServiceIds) {
+             this.includeServiceIds = null;
+        }
+    }
+
+    private void checkAndLogErrorForAssetsSelection() {
+        List<String> assetsSource = new ArrayList<>();
+        assetsSource.add(this.includeEndpointIds);
+        assetsSource.add(this.includeServiceIds);
+        assetsSource.add(this.includeEndpointLabels);
+
+        boolean containsNull = assetsSource.stream().anyMatch(Objects::isNull);
+
+        try {
+            if(!containsNull) {
+                throw new RuntimeException("all assets can't be empty");
+            }
+        } catch (Exception exception) {
+            log.error("All assets are empty");
+            exception.printStackTrace();
+        }
+    }
+
+    private void resetOtherTrafficType(TrafficType trafficType) {
+        if(trafficType == TrafficType.XAST_LIVE) {
+            this.xastReplay = false;
+            resetDastTrafficSource();
+        }
+        else if(trafficType == TrafficType.XAST_REPLAY) {
+            this.xastLive = false;
+            resetDastTrafficSource();
+        }
+
+        else if(trafficType == TrafficType.DAST_POSTMAN_COLLECTION) {
+            this.xastLive = false;
+            this.xastReplay = false;
+            this.targetUrl = null;
+            resetOpenApiTrafficSource();
+        }
+
+        else {
+            this.xastLive = false;
+            this.xastReplay = false;
+            try {
+                if (this.targetUrl == null) {
+                    throw new IllegalArgumentException("Target URL can't be empty");
+                }
+                resetPostManCollectionTrafficSource();
+            } catch (IllegalArgumentException e) {
+                log.error("target url is empty while using Open API Traffic Source");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void resetDastTrafficSource() {
+        this.postmanCollection = null;
+        this.postmanEnvironment = null;
+        this.openApiSpecIds = null;
+        this.openApiSpecFiles = null;
+    }
+
+    private void resetOpenApiTrafficSource() {
+        this.openApiSpecIds = null;
+        this.openApiSpecFiles = null;
+
+        try {
+            if(Objects.isNull(this.postmanCollection)) {
+                throw new RuntimeException("postman collection can't be empty");
+            }
+        } catch (Exception exception) {
+            log.error("Postman Collection is empty");
+            exception.printStackTrace();
+        }
+    }
+
+    private void resetPostManCollectionTrafficSource() {
+        this.postmanCollection = null;
+        this.postmanEnvironment = null;
+
+        try {
+            if(Objects.isNull(this.openApiSpecIds)) {
+                throw new RuntimeException("open api spec id is empty");
+            }
+        } catch (Exception exception) {
+            log.error("open api spec ids is empty ");
+            exception.printStackTrace();
+        }
     }
 
     @Extension
