@@ -26,10 +26,16 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     private String maxRetries;
     private static String scanId;
 
+    private Boolean shouldUploadLogs;
+
     public String getIdleTimeout() { return idleTimeout; }
     public String getMaxRetries() { return maxRetries; }
     public static String getScanId() {
         return scanId;
+    }
+
+    public Boolean getShouldUploadLogs() {
+        return shouldUploadLogs;
     }
 
     @DataBoundConstructor
@@ -44,6 +50,10 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
         TraceableASTRunStepBuilder.scanId = scanId;
     }
 
+    @DataBoundSetter
+    public void setShouldUploadLogs(Boolean shouldUploadLogs) {
+        this.shouldUploadLogs = shouldUploadLogs;
+    }
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         runScan(listener, run);

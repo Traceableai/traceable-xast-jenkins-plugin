@@ -27,7 +27,7 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanRunCmd=$traceableCliBinaryLocation' ast scan run'
-optionsArr=('--token'  '--idle-timeout' '--max-retries')
+optionsArr=('--token'  '--idle-timeout' '--max-retries' '--should-upload-logs')
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
