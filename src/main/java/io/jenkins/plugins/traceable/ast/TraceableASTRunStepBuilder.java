@@ -66,12 +66,14 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     // Run the scan.
     private void runScan( TaskListener listener, Run<?, ?> run ){
         String scriptPath = "shell_scripts/run_ast_scan.sh";
+        String uploadLogs = shouldUploadLogs ? "true" : "false";
         String[] args =
                 new String[] {
                         TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
                         TraceableASTInitStepBuilder.getClientToken(),
                         idleTimeout,
                         maxRetries,
+                        uploadLogs,
                         TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                         TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
                         TraceableASTInitStepBuilder.getTraceableCliKeyFileName(),

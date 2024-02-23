@@ -29,23 +29,35 @@ traceableCliBinaryLocation=$1
 scanRunCmd=$traceableCliBinaryLocation' ast scan run'
 optionsArr=('--token'  '--idle-timeout' '--max-retries' '--should-upload-logs')
 
-#Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:2:3}"
+for option in "${@:2:4}"
 do
-  if [ -z "$option" ] || [ "$option" = "''" ]
-  then
+  echo "${optionsArr[$iterator]}" is iterator
+  echo "${option}" optionssss
+  echo "${iterator}" interatorssssss
+
+  if [ -z "$option" ] || [ "$option" = "''" ]; then
     echo "${optionsArr[$iterator]}" is Null
   else
-    scanRunCmd=$scanRunCmd" "${optionsArr[$iterator]}" "${option}
+    if [[ "${optionsArr[$iterator]}" = '--should-upload-logs' ]]; then
+      if [[ "$option" = "true" ]]; then
+        scanRunCmd=$scanRunCmd" "${optionsArr[$iterator]}
+      fi
+    else
+      scanRunCmd=$scanRunCmd" "${optionsArr[$iterator]}" "$option
+    fi
   fi
-  iterator=$(($iterator+1))
+
+  iterator=$((iterator + 1))
 done
 
-if [ -z "${8}" ] || [ "${8}" = "''" ]
+
+if [ -z "${9}" ] || [ "${9}" = "''" ]
 then
-  scanRunCmd=$scanRunCmd" --config-file "${8}
+  scanRunCmd=$scanRunCmd" --config-file "${9}
 fi
 
+echo "$scanRunCmd"
+
 # Run the command
-eval $scanRunCmd
+eval "$scanRunCmd"
