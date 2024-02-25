@@ -1,6 +1,6 @@
 package io.jenkins.plugins.traceable.ast;
 
-import static java.util.List.of;
+
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -8,20 +8,16 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.util.FormFillFailure;
-import hudson.util.FormValidation;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.servlet.ServletException;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -32,8 +28,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.UUID;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.verb.POST;
 
 
 @Slf4j
@@ -235,21 +229,33 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     @DataBoundSetter
     public void setPostmanEnvironment(String postmanEnvironment) {
         this.postmanEnvironment = postmanEnvironment;
+        if(trafficType != TrafficType.DAST_POSTMAN_COLLECTION) {
+            this.postmanEnvironment = null;
+        }
     }
 
     @DataBoundSetter
     public void setPostmanCollection(String postmanCollection) {
         this.postmanCollection = postmanCollection;
+        if(trafficType != TrafficType.DAST_POSTMAN_COLLECTION) {
+            this.postmanCollection = null;
+        }
     }
 
     @DataBoundSetter
     public void setOpenApiSpecIds(String openApiSpecIds) {
         this.openApiSpecIds = openApiSpecIds;
+        if(trafficType != TrafficType.DAST_OPEN_API_SPECS) {
+            this.openApiSpecIds = null;
+        }
     }
 
     @DataBoundSetter
     public void setOpenApiSpecFiles(String openApiSpecFiles) {
         this.openApiSpecFiles = openApiSpecFiles;
+        if(trafficType != TrafficType.DAST_OPEN_API_SPECS) {
+            this.openApiSpecFiles = null;
+        }
     }
 
     @DataBoundSetter
@@ -270,16 +276,25 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     @DataBoundSetter
     public void setIncludeEndpointLabels(String includeEndpointLabels) {
         this.includeEndpointLabels = includeEndpointLabels;
+        if(assets != Assets.EndpointLabels) {
+            this.includeEndpointLabels = null;
+        }
     }
 
     @DataBoundSetter
     public void setIncludeEndpointIds(String includeEndpointIds) {
-        this.includeEndpointIds = includeEndpointIds;
+       this.includeEndpointIds = includeEndpointIds;
+       if(assets != Assets.EndpointIds) {
+           this.includeEndpointIds = null;
+       }
     }
 
     @DataBoundSetter
     public void setIncludeServiceIds(String includeServiceIds) {
         this.includeServiceIds = includeServiceIds;
+        if(assets != Assets.ServiceIds) {
+            this.includeServiceIds = null;
+        }
     }
 
     @DataBoundSetter
@@ -290,12 +305,27 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     @DataBoundSetter
     public void setAssets(Assets assets) {
         this.assets = assets;
-        resetOtherAssetsSelections(assets);
+        if(assets != Assets.AllEndpoints) {
+            this.includeAllEndPoints = false;
+        }
     }
 
     @DataBoundSetter
     public void setTrafficType(TrafficType trafficType) {
-      this.trafficType = trafficType;
+        this.trafficType = trafficType;
+        switch (trafficType) {
+            case XAST_LIVE:
+                this.xastLive = true;
+                this.xastReplay = false;
+                break;
+            case XAST_REPLAY:
+                this.xastLive = false;
+                this.xastReplay = true;
+                break;
+            default:
+                this.xastLive = false;
+                this.xastReplay = false;
+        }
     }
 
     @DataBoundConstructor
@@ -348,13 +378,15 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private void runAndInitScan( TaskListener listener, Run<?, ?> run ){
         String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
         Path configPath = null;
+
+        String replay = String.valueOf(xastReplay != null && xastReplay);
+        String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
+
         try {
 
         // Creating an instance of file
         configPath = Paths.get(workspacePathString , "/config.yaml");
         byte[] arr = configFile.getBytes();
-
-            System.out.println(" postman collection " + postmanCollection);
 
             // Write the string to file
             java.nio.file.Files.write(configPath, arr);
@@ -390,6 +422,8 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             includeEndpointIds,
             includeEndpointLabels,
             hookName,
+            allEndPoint,
+            replay,
             configPath.toString()
           };
         runScript(scriptPath, args, listener, "runAndInitScan");
@@ -462,120 +496,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         .start();
     }
 
-    private void resetOtherAssetsSelections(Assets assets) {
-        if (assets == Assets.AllEndpoints) {
-            resetAllSelections();
-        } else {
-            this.includeAllEndPoints = false;
-            resetSelectionsExcluding(assets);
-        }
-    }
-
-    private void resetAllSelections() {
-        this.includeEndpointIds = null;
-        this.includeEndpointLabels = null;
-        this.includeServiceIds = null;
-        this.includeAllEndPoints = true;
-    }
-
-    private void resetSelectionsExcluding(Assets excludedAsset) {
-        checkAndLogErrorForAssetsSelection();
-
-        if (excludedAsset != Assets.EndpointIds) {
-            this.includeEndpointIds = null;
-        }
-        if (excludedAsset != Assets.EndpointLabels) {
-            this.includeEndpointLabels = null;
-        }
-        if (excludedAsset != Assets.ServiceIds) {
-             this.includeServiceIds = null;
-        }
-    }
-
-    private void checkAndLogErrorForAssetsSelection() {
-        List<String> assetsSource = new ArrayList<>();
-        assetsSource.add(this.includeEndpointIds);
-        assetsSource.add(this.includeServiceIds);
-        assetsSource.add(this.includeEndpointLabels);
-
-        boolean containsNull = assetsSource.stream().anyMatch(Objects::isNull);
-
-        try {
-            if(!containsNull) {
-                throw new RuntimeException("all assets can't be empty");
-            }
-        } catch (Exception exception) {
-            log.error("All assets are empty");
-            exception.printStackTrace();
-        }
-    }
-
-    private void resetOtherTrafficType(TrafficType trafficType) {
-        if(trafficType == TrafficType.XAST_LIVE) {
-            this.xastReplay = false;
-            resetDastTrafficSource();
-        }
-        else if(trafficType == TrafficType.XAST_REPLAY) {
-            this.xastLive = false;
-            resetDastTrafficSource();
-        }
-
-        else if(trafficType == TrafficType.DAST_POSTMAN_COLLECTION) {
-            this.xastLive = false;
-            this.xastReplay = false;
-            this.targetUrl = null;
-            resetOpenApiTrafficSource();
-        }
-
-        else {
-            this.xastLive = false;
-            this.xastReplay = false;
-            try {
-                if (this.targetUrl == null) {
-                    throw new IllegalArgumentException("Target URL can't be empty");
-                }
-                resetPostManCollectionTrafficSource();
-            } catch (IllegalArgumentException e) {
-                log.error("target url is empty while using Open API Traffic Source");
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void resetDastTrafficSource() {
-        this.postmanCollection = null;
-        this.postmanEnvironment = null;
-        this.openApiSpecIds = null;
-        this.openApiSpecFiles = null;
-    }
-
-    private void resetOpenApiTrafficSource() {
-        this.openApiSpecIds = null;
-        this.openApiSpecFiles = null;
-
-        try {
-            if(Objects.isNull(this.postmanCollection)) {
-                throw new RuntimeException("postman collection can't be empty");
-            }
-        } catch (Exception exception) {
-            log.error("Postman Collection is empty");
-            exception.printStackTrace();
-        }
-    }
-
-    private void resetPostManCollectionTrafficSource() {
-        this.postmanCollection = null;
-        this.postmanEnvironment = null;
-
-        try {
-            if(Objects.isNull(this.openApiSpecIds)) {
-                throw new RuntimeException("open api spec id is empty");
-            }
-        } catch (Exception exception) {
-            log.error("open api spec ids is empty ");
-            exception.printStackTrace();
-        }
-    }
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {

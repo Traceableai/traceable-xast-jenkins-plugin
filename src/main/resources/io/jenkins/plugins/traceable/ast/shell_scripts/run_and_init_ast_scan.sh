@@ -25,37 +25,43 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--build-id' '--build-url' '--reference-env' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names' '--include-all-endpoints' '--xast-replay')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:5:25}"
+for option in "${@:5:26}"
 do
-  if [ -z "$option" ] || [ "$option" = "''" ]
-  then
-    echo "${optionsArr[$iterator]}" is Null
+  # Check for "--include-all-endpoints" and its value separately
+  if [[ "${optionsArr[$iterator]}" == "--include-all-endpoints" && "$option" == "true" ]]; then
+    scanInitCmd="$scanInitCmd ${optionsArr[$iterator]}"
+  # Check for "--xast-replay" and its value separately
+  elif [[ "${optionsArr[$iterator]}" == "--xast-replay" && "$option" == "true" ]]; then
+    scanInitCmd="$scanInitCmd ${optionsArr[$iterator]}"
+  elif [ -z "$option" ] || [ "$option" = "''" ] || [ "$option" == "false" ]; then
+    echo "${optionsArr[$iterator]} is Null"
   else
     presentInStringArr=0
     for subOption in "${stringArr[@]}"
     do
-      if [ "$subOption" == "${optionsArr[$iterator]}" ]
-      then
+      if [ "$subOption" == "${optionsArr[$iterator]}" ]; then
         presentInStringArr=1
       fi
     done
-    if [ $presentInStringArr -eq 0 ]
-    then
-      scanInitCmd=$scanInitCmd" "${optionsArr[$iterator]}" "${option}
+    if [ $presentInStringArr -eq 0 ]; then
+      scanInitCmd="$scanInitCmd ${optionsArr[$iterator]} ${option}"
     else
-      scanInitCmd=$scanInitCmd" "${optionsArr[$iterator]}" "\"${option}\"
+      scanInitCmd="$scanInitCmd ${optionsArr[$iterator]} \"${option}\""
     fi
   fi
-  iterator=$(($iterator+1))
+  iterator=$((iterator + 1))
 done
-if [ -z "${26}" ] || [ "${26}" = "''" ]
+
+
+
+if [ -z "${27}" ] || [ "${27}" = "''" ]
 then
-  scanInitCmd=$scanInitCmd" --config-file "${26}
+  scanInitCmd=$scanInitCmd" --config-file "${27}
 fi
 echo "$scanInitCmd"
 # Run the command
