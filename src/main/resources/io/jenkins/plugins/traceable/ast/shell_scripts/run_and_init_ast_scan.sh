@@ -25,12 +25,12 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names' '--include-all-endpoints' '--xast-replay')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names' '--include-all-endpoints' '--xast-replay' '--should-upload-logs')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:5:26}"
+for option in "${@:5:27}"
 do
   # Check for "--include-all-endpoints" and its value separately
   if [[ "${optionsArr[$iterator]}" == "--include-all-endpoints" && "$option" == "true" ]]; then
@@ -38,6 +38,8 @@ do
   # Check for "--xast-replay" and its value separately
   elif [[ "${optionsArr[$iterator]}" == "--xast-replay" && "$option" == "true" ]]; then
     scanInitCmd="$scanInitCmd ${optionsArr[$iterator]}"
+    elif [[ "${optionsArr[$iterator]}" == "--should-upload-logs" && "$option" == "true" ]]; then
+      scanInitCmd="$scanInitCmd ${optionsArr[$iterator]}"
   elif [ -z "$option" ] || [ "$option" = "''" ] || [ "$option" == "false" ]; then
     echo "${optionsArr[$iterator]} is Null"
   else
@@ -59,9 +61,9 @@ done
 
 
 
-if [ -z "${27}" ] || [ "${27}" = "''" ]
+if [ -z "${28}" ] || [ "${28}" = "''" ]
 then
-  scanInitCmd=$scanInitCmd" --config-file "${27}
+  scanInitCmd=$scanInitCmd" --config-file "${28}
 fi
 echo "$scanInitCmd"
 # Run the command

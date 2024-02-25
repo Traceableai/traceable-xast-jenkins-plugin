@@ -15,9 +15,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -54,7 +51,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private String scanTimeout;
     private static String scanId;
     private static Boolean scanEnded;
-    private String referenceEnv;
     private String maxRetries;
     private static String traceableRootCaFileName;
     private static String traceableCliCertFileName;
@@ -105,7 +101,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     public String getScanTimeout() { return scanTimeout; }
     public static String getScanId() { return scanId; }
     public static Boolean getScanEnded() { return scanEnded; }
-    public String getReferenceEnv() { return referenceEnv; }
+
     public String getMaxRetries() { return maxRetries; }
     public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
@@ -199,9 +195,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     @DataBoundSetter
     public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
-
-    @DataBoundSetter
-    public void setReferenceEnv(String referenceEnv) { this.referenceEnv = referenceEnv;}
 
     @DataBoundSetter
     public void setMaxRetries(String maxRetries) { this.maxRetries = maxRetries; }
@@ -424,6 +417,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             hookName,
             allEndPoint,
             replay,
+            Boolean.toString(shouldUploadLogs),
             configPath.toString()
           };
         runScript(scriptPath, args, listener, "runAndInitScan");

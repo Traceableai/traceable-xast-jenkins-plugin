@@ -12,6 +12,11 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
+import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -30,7 +35,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String scanName;
     private String testEnvironment;
     private static String clientToken;
-    private String policyName;
+    private String attackPolicy;
     private String scanEvalCriteria;
     private String openApiSpecIds;
     private String openApiSpecFiles;
@@ -46,7 +51,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String traceableServer;
     private String scanTimeout;
     private static Boolean scanEnded;
-    private String referenceEnv;
     private static String traceableRootCaFileName;
     private static String traceableCliCertFileName;
     private static String traceableCliKeyFileName;
@@ -55,6 +59,33 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String suiteName;
 
     private static String configPathString;
+
+    private String includeEndpointLabels;
+
+    private String includeEndpointIds;
+
+    private String includeServiceIds;
+
+
+    private String hookName;
+
+    private Assets assets;
+
+    private TrafficType trafficType;
+
+    private Boolean includeAllEndPoints;
+
+    private Boolean xastLive;
+
+    private Boolean xastReplay;
+
+    public Assets getAssets(){
+        return assets;
+    }
+
+    public TrafficType getTrafficType() {
+        return trafficType;
+    }
 
 
     public String getScanName() { return scanName; }
@@ -68,7 +99,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public String getTraceableServer() { return traceableServer; }
     public String getScanTimeout() { return scanTimeout; }
     public static Boolean getScanEnded() { return scanEnded; }
-    public String getReferenceEnv() { return referenceEnv; }
     public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
     public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
@@ -83,7 +113,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     public String getOpenApiSpecIds() { return openApiSpecIds; }
 
-    public String getPolicyName() { return policyName; }
+    public String getAttackPolicy() { return attackPolicy; }
 
     public String getCliSource() {
         return cliSource;
@@ -97,10 +127,86 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         return suiteName;
     }
 
+    public String getIncludeEndpointLabels() {
+        return includeEndpointLabels;
+    }
+
+    public String getIncludeEndpointIds() {
+        return includeEndpointIds;
+    }
+
+    public String getIncludeServiceIds() {
+        return includeServiceIds;
+    }
+
+
+    public String getHookName() {
+        return hookName;
+    }
+
+
 
     @DataBoundConstructor
     public TraceableASTInitStepBuilder() {
         traceableCliBinaryLocation = null;
+        this.includeAllEndPoints = true;
+        this.xastLive = true;
+    }
+
+    @DataBoundSetter
+    public void setIncludeEndpointLabels(String includeEndpointLabels) {
+        this.includeEndpointLabels = includeEndpointLabels;
+        if(assets != Assets.EndpointLabels) {
+            this.includeEndpointLabels = null;
+        }
+    }
+
+    @DataBoundSetter
+    public void setIncludeEndpointIds(String includeEndpointIds) {
+        this.includeEndpointIds = includeEndpointIds;
+        if(assets != Assets.EndpointIds) {
+            this.includeEndpointIds = null;
+        }
+    }
+
+    @DataBoundSetter
+    public void setIncludeServiceIds(String includeServiceIds) {
+        this.includeServiceIds = includeServiceIds;
+        if(assets != Assets.ServiceIds) {
+            this.includeServiceIds = null;
+        }
+    }
+
+    @DataBoundSetter
+    public void setTrafficType(TrafficType trafficType) {
+        this.trafficType = trafficType;
+        switch (trafficType) {
+            case XAST_LIVE:
+                this.xastLive = true;
+                this.xastReplay = false;
+                break;
+            case XAST_REPLAY:
+                this.xastLive = false;
+                this.xastReplay = true;
+                break;
+            default:
+                this.xastLive = false;
+                this.xastReplay = false;
+        }
+
+    }
+
+    @DataBoundSetter
+    public void setAssets(Assets assets) {
+        this.assets = assets;
+        if(assets != Assets.AllEndpoints) {
+            this.includeAllEndPoints = false;
+        }
+    }
+
+    @DataBoundSetter
+    public void setHookName(String hookName) {
+        this.hookName = hookName;
     }
     @DataBoundSetter
     public void setCliSource(String cliSource) {
@@ -143,9 +249,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public void setScanTimeout(String  scanTimeout) { this.scanTimeout = scanTimeout; }
 
     @DataBoundSetter
-    public void setReferenceEnv(String referenceEnv) { this.referenceEnv = referenceEnv;}
-
-    @DataBoundSetter
     public static void setTraceableRootCaFileName(String traceableRootCaFileName) {
         TraceableASTInitStepBuilder.traceableRootCaFileName = traceableRootCaFileName;
     }
@@ -168,26 +271,43 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     @DataBoundSetter
     public void setPostmanEnvironment(String postmanEnvironment) {
         this.postmanEnvironment = postmanEnvironment;
+        if(trafficType != TrafficType.DAST_POSTMAN_COLLECTION) {
+            this.postmanEnvironment = null;
+        }
     }
 
     @DataBoundSetter
     public void setPostmanCollection(String postmanCollection) {
         this.postmanCollection = postmanCollection;
+        if(trafficType != TrafficType.DAST_POSTMAN_COLLECTION) {
+            this.postmanCollection = null;
+        }
     }
 
     @DataBoundSetter
     public void setOpenApiSpecIds(String openApiSpecIds) {
         this.openApiSpecIds = openApiSpecIds;
+        if(trafficType != TrafficType.DAST_OPEN_API_SPECS) {
+            this.openApiSpecIds = null;
+        }
     }
 
     @DataBoundSetter
     public void setOpenApiSpecFiles(String openApiSpecFiles) {
         this.openApiSpecFiles = openApiSpecFiles;
+        if(trafficType != TrafficType.DAST_OPEN_API_SPECS) {
+            this.openApiSpecFiles = null;
+        }
     }
 
     @DataBoundSetter
     public void setSuiteName(String suiteName) {
         this.suiteName = suiteName;
+    }
+
+    @DataBoundSetter
+    public void setAttackPolicy(String attackPolicy) {
+        this.attackPolicy = attackPolicy;
     }
 
     public static String getConfigPathString() {
@@ -231,6 +351,10 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private void initScan( TaskListener listener, Run<?, ?> run ){
         String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
         Path configPath = null;
+
+        String replay = String.valueOf(xastReplay != null && xastReplay);
+        String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
+
         try {
 
             // Creating an instance of file
@@ -248,28 +372,31 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         String[] args =
                 new String[] {
                         traceableCliBinaryLocation,
+                        traceableRootCaFileName,
+                        traceableCliCertFileName,
+                        traceableCliKeyFileName,
                         scanName,
                         testEnvironment,
                         clientToken,
-                        policyName,
+                        attackPolicy,
                         pluginsToInclude,
                         includeUrlRegex,
                         excludeUrlRegex,
                         targetUrl,
                         traceableServer,
                         scanTimeout,
-                        run.getId(),
-                        run.getUrl(),
-                        referenceEnv,
                         openApiSpecIds,
                         openApiSpecFiles,
                         postmanCollection,
                         postmanEnvironment,
-                        traceableRootCaFileName,
-                        traceableCliCertFileName,
-                        traceableCliKeyFileName,
+                        suiteName,
+                        includeServiceIds,
+                        includeEndpointIds,
+                        includeEndpointLabels,
+                        hookName,
+                        allEndPoint,
+                        replay,
                         configPathString,
-                        suiteName
                 };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }

@@ -29,8 +29,54 @@
         <f:textbox field="suiteName"/>
     </f:entry>
     <f:entry title="${%ScanEvalCriteria}">
-        <f:textarea field="scanEvalCriteria" />
+        <f:textbox field="scanEvalCriteria"/>
     </f:entry>
+
+    <f:entry title="${%SelectAssets}" field="assets">
+        <f:radioBlock name="assets" value="AllEndpoints" checked="true" title="${%AllEndpoints}" inline="true"/>
+        <f:radioBlock name="assets" value="EndpointLabels" checked="false" title="${%EndpointLabels}" inline="true">
+            <f:entry title="Include Endpoint Labels (comma separated)">
+                <f:textbox field="includeEndpointLabels"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="EndpointIds" checked="false" title="${%EndpointIds}" inline="true">
+            <f:entry title="Include Endpoint IDs (comma separated)">
+                <f:textbox field="includeEndpointIds"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="ServiceIds" checked="false" title="${%ServiceIds}" inline="true">
+            <f:entry title="Include Service IDs (comma separated)">
+                <f:textbox field="includeServiceIds"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+    <f:entry title="${%TrafficType}" field="trafficType">
+        <f:radioBlock name="trafficType"  value="XAST_LIVE" checked="true" title="${%LiveTraffic}" inline="true"/>
+        <f:radioBlock name="trafficType" value="XAST_REPLAY" checked="false" title="${%ReplayTraffic}" inline="true"/>
+
+        <f:radioBlock name="trafficType" value="DAST_OPEN_API_SPECS" checked="false" title="${%OpenApiSpecs}" inline="true">
+            <f:entry title="OpenApiSpecIds (comma separated)">
+                <f:textbox field="openApiSpecIds"/>
+            </f:entry>
+
+            <f:entry title="OpenApiSpecFiles (comma separated)">
+                <f:textbox field="openApiSpecFiles"/>
+            </f:entry>
+        </f:radioBlock>
+
+        <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="false" title="${%PostManCollection}" inline="true">
+            <f:entry title="PostmanCollection (comma separated)">
+                <f:textbox field="postmanCollection" value="${descriptor.doCheckField(value)}"/>
+            </f:entry>
+
+            <f:entry title="PostmanEnvironment (comma separated)">
+                <f:textbox field="postmanEnvironment"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+
     <f:advanced>
         <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable/field-help/Plugins.html">
             <f:textbox  field="pluginsToInclude"/>
@@ -48,18 +94,6 @@
             <f:textbox />
         </f:entry>
         <f:entry title="${%ScanTimeout} (in minutes)" field="scanTimeout">
-            <f:textbox />
-        </f:entry>
-        <f:entry title="${%OpenApiSpecIds} (comma seperated)" field="openApiSpecIds">
-            <f:textbox />
-        </f:entry>
-        <f:entry title="${%OpenApiSpecFiles} (comma seperated)" field="openApiSpecFiles">
-            <f:textbox />
-        </f:entry>
-        <f:entry title="${%PostmanCollection}" field="postmanCollection">
-            <f:textbox />
-        </f:entry>
-        <f:entry title="${%PostmanEnvironment}" field="postmanEnvironment">
             <f:textbox />
         </f:entry>
         <f:entry title="${%CaFileName}" field="traceableRootCaFileName">
