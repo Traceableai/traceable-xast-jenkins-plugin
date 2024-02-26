@@ -34,7 +34,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     private String testEnvironment;
     private static String clientToken;
     private String attackPolicy;
-    private String scanEvalCriteria;
     private String openApiSpecIds;
     private String openApiSpecFiles;
     private String postmanCollection;
@@ -107,7 +106,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
     public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
 
-    public String getScanEvalCriteria() { return scanEvalCriteria; }
 
     public String getPostmanEnvironment() { return postmanEnvironment; }
 
@@ -212,11 +210,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     @DataBoundSetter
     public static void setTraceableCliKeyFileName(String traceableCliKeyFileName) {
         TraceableASTInitAndRunStepBuilder.traceableCliKeyFileName = traceableCliKeyFileName;
-    }
-
-    @DataBoundSetter
-    public void setScanEvalCriteria(String scanEvalCriteria) {
-        this.scanEvalCriteria = scanEvalCriteria;
     }
 
     @DataBoundSetter
@@ -369,24 +362,9 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     // Run the scan.
     private void runAndInitScan( TaskListener listener, Run<?, ?> run ){
-        String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
-        Path configPath = null;
 
         String replay = String.valueOf(xastReplay != null && xastReplay);
         String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
-
-        try {
-
-        // Creating an instance of file
-        configPath = Paths.get(workspacePathString , "/config.yaml");
-        byte[] arr = configFile.getBytes();
-
-            // Write the string to file
-            java.nio.file.Files.write(configPath, arr);
-        } catch (IOException e) {
-            log.error("Error writing to config.yaml the config: {}", configFile);
-            throw new RuntimeException(e);
-        }
         String scriptPath = "shell_scripts/run_and_init_ast_scan.sh";
         String[] args =
           new String[] {
@@ -417,8 +395,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             hookName,
             allEndPoint,
             replay,
-            Boolean.toString(shouldUploadLogs),
-            configPath.toString()
+            Boolean.toString(shouldUploadLogs)
           };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }

@@ -75,8 +75,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
                         Boolean.toString(shouldUploadLogs),
                         TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                         TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
-                        TraceableASTInitStepBuilder.getTraceableCliKeyFileName(),
-                        TraceableASTInitStepBuilder.getConfigPathString()
+                        TraceableASTInitStepBuilder.getTraceableCliKeyFileName()
                 };
         runScript(scriptPath, args, listener, "runScan");
     }

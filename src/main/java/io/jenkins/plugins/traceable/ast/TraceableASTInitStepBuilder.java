@@ -36,7 +36,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String testEnvironment;
     private static String clientToken;
     private String attackPolicy;
-    private String scanEvalCriteria;
     private String openApiSpecIds;
     private String openApiSpecFiles;
     private String postmanCollection;
@@ -57,8 +56,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private String workspacePathString;
 
     private String suiteName;
-
-    private static String configPathString;
 
     private String includeEndpointLabels;
 
@@ -102,8 +99,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public static String getTraceableRootCaFileName() { return traceableRootCaFileName; }
     public static String getTraceableCliCertFileName() { return traceableCliCertFileName; }
     public static String getTraceableCliKeyFileName() { return traceableCliKeyFileName; }
-
-    public String getScanEvalCriteria() { return scanEvalCriteria; }
 
     public String getPostmanEnvironment() { return postmanEnvironment; }
 
@@ -263,10 +258,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         TraceableASTInitStepBuilder.traceableCliKeyFileName = traceableCliKeyFileName;
     }
 
-    @DataBoundSetter
-    public void setScanEvalCriteria(String scanEvalCriteria) {
-        this.scanEvalCriteria = scanEvalCriteria;
-    }
 
     @DataBoundSetter
     public void setPostmanEnvironment(String postmanEnvironment) {
@@ -310,9 +301,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         this.attackPolicy = attackPolicy;
     }
 
-    public static String getConfigPathString() {
-        return configPathString;
-    }
     public static void setScanEnded(Boolean scanEnded) {
         TraceableASTInitStepBuilder.scanEnded = scanEnded;
     }
@@ -349,25 +337,9 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     // Run the scan.
     private void initScan( TaskListener listener, Run<?, ?> run ){
-        String configFile= "scan:\n plugins:\n  disabled: true\n  custom:\n   disabled: false\n " + scanEvalCriteria.replaceAll("\n","\n ");
-        Path configPath = null;
-
         String replay = String.valueOf(xastReplay != null && xastReplay);
         String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
 
-        try {
-
-            // Creating an instance of file
-            configPath = Paths.get(workspacePathString , "/config.yaml");
-            configPathString = configPath.toString();
-            byte[] arr = configFile.getBytes();
-
-            // Write the string to file
-            java.nio.file.Files.write(configPath, arr);
-        } catch (IOException e) {
-            log.error("Error writing to config.yaml the config: {}", configFile);
-            throw new RuntimeException(e);
-        }
         String scriptPath = "shell_scripts/init_ast_scan.sh";
         String[] args =
                 new String[] {
@@ -396,7 +368,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                         hookName,
                         allEndPoint,
                         replay,
-                        configPathString,
                 };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }

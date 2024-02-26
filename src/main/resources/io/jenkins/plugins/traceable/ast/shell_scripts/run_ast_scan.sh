@@ -32,10 +32,6 @@ optionsArr=('--token'  '--idle-timeout' '--max-retries' '--should-upload-logs')
 iterator=0
 for option in "${@:2:4}"
 do
-  echo "${optionsArr[$iterator]}" is iterator
-  echo "${option}" optionssss
-  echo "${iterator}" interatorssssss
-
   if [ -z "$option" ] || [ "$option" = "''" ]; then
     echo "${optionsArr[$iterator]}" is Null
   else
@@ -50,12 +46,6 @@ do
 
   iterator=$((iterator + 1))
 done
-
-
-if [ -z "${9}" ] || [ "${9}" = "''" ]
-then
-  scanRunCmd=$scanRunCmd" --config-file "${9}
-fi
 
 echo "$scanRunCmd"
 

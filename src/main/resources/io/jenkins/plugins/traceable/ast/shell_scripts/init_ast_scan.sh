@@ -59,10 +59,6 @@ do
   iterator=$((iterator + 1))
 done
 
-if [ -z "${24}" ] || [ "${24}" = "''" ]
-then
-  scanInitCmd=$scanInitCmd" --config-file "${24}
-fi
 echo "$scanInitCmd"
 # Run the command
 eval "$scanInitCmd"

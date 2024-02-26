@@ -27,23 +27,20 @@
     <f:entry title="${%SuiteName}">
         <f:textbox field="suiteName"/>
     </f:entry>
-    <f:entry title="${%ScanEvalCriteria}">
-        <f:textbox field="scanEvalCriteria"/>
-    </f:entry>
 
     <f:entry title="${%SelectAssets}" field="assets">
-        <f:radioBlock name="assets" value="AllEndpoints" checked="true" title="${%AllEndpoints}" inline="true"/>
-        <f:radioBlock name="assets" value="EndpointLabels" checked="false" title="${%EndpointLabels}" inline="true">
+        <f:radioBlock name="assets" value="AllEndpoints" checked="${instance.assets == null || instance.assets.name() == 'AllEndpoints' ? 'true':null}" title="${%AllEndpoints}" inline="true"/>
+        <f:radioBlock name="assets" value="EndpointLabels" checked="${instance.assets.name() == 'EndpointLabels' ? 'true':null}" title="${%EndpointLabels}" inline="true">
             <f:entry title="Include Endpoint Labels (comma separated)">
                 <f:textbox field="includeEndpointLabels"/>
             </f:entry>
         </f:radioBlock>
-        <f:radioBlock name="assets" value="EndpointIds" checked="false" title="${%EndpointIds}" inline="true">
+        <f:radioBlock name="assets" value="EndpointIds" checked="${instance.assets.name() == 'EndpointIds' ? 'true':null}" title="${%EndpointIds}" inline="true">
             <f:entry title="Include Endpoint IDs (comma separated)">
                 <f:textbox field="includeEndpointIds"/>
             </f:entry>
         </f:radioBlock>
-        <f:radioBlock name="assets" value="ServiceIds" checked="false" title="${%ServiceIds}" inline="true">
+        <f:radioBlock name="assets" value="ServiceIds" checked="${instance.assets.name() == 'ServiceIds' ? 'true':null}" title="${%ServiceIds}" inline="true">
             <f:entry title="Include Service IDs (comma separated)">
                 <f:textbox field="includeServiceIds"/>
             </f:entry>
@@ -51,10 +48,10 @@
     </f:entry>
 
     <f:entry title="${%TrafficType}" field="trafficType">
-        <f:radioBlock name="trafficType"  value="XAST_LIVE" checked="true" title="${%LiveTraffic}" inline="true"/>
-        <f:radioBlock name="trafficType" value="XAST_REPLAY" checked="false" title="${%ReplayTraffic}" inline="true"/>
+        <f:radioBlock name="trafficType"  value="XAST_LIVE" checked="${instance.trafficType == null || instance.trafficType.name() == 'XAST_LIVE' ? 'true':null}" title="${%LiveTraffic}" inline="true"/>
+        <f:radioBlock name="trafficType" value="XAST_REPLAY" checked="${instance.trafficType.name() == 'XAST_REPLAY' ? 'true':null}" title="${%ReplayTraffic}" inline="true"/>
 
-        <f:radioBlock name="trafficType" value="DAST_OPEN_API_SPECS" checked="false" title="${%OpenApiSpecs}" inline="true">
+        <f:radioBlock name="trafficType" value="DAST_OPEN_API_SPECS" checked="${instance.trafficType.name() == 'DAST_OPEN_API_SPECS' ? 'true':null}" title="${%OpenApiSpecs}" inline="true">
             <f:entry title="OpenApiSpecIds (comma separated)">
                 <f:textbox field="openApiSpecIds"/>
             </f:entry>
@@ -64,7 +61,7 @@
             </f:entry>
         </f:radioBlock>
 
-        <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="false" title="${%PostManCollection}" inline="true">
+        <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="${instance.trafficType.name() == 'DAST_POSTMAN_COLLECTION' ? 'true':null}" title="${%PostManCollection}" inline="true">
             <f:entry title="PostmanCollection (comma separated)">
                 <f:textbox field="postmanCollection" value="${descriptor.doCheckField(value)}"/>
             </f:entry>
