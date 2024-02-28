@@ -27,12 +27,13 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanRunCmd=$traceableCliBinaryLocation' ast scan run'
-optionsArr=('--token'  '--idle-timeout' '--max-retries' '--should-upload-logs')
+optionsArr=('--token' '--idle-timeout' '--max-retries' '--should-upload-logs')
 
 iterator=0
-for option in "${@:2:5}"
+for option in "${@:2:4}"
 do
-  if [ -z "$option" ] || [ "$option" = "''" ]; then
+
+  if [ -z "$option" ] || [ "$option" = "''" ] || [ "$option" == "false" ]; then
     echo "${optionsArr[$iterator]}" is Null
   else
     if [[ "${optionsArr[$iterator]}" = '--should-upload-logs' ]]; then
@@ -43,7 +44,6 @@ do
       scanRunCmd=$scanRunCmd" "${optionsArr[$iterator]}" "$option
     fi
   fi
-
   iterator=$((iterator + 1))
 done
 

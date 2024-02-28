@@ -30,7 +30,7 @@ stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:5:28}"
+for option in "${@:5:24}"
 do
   # Check for "--include-all-endpoints" and its value separately
   if [[ "${optionsArr[$iterator]}" == "--include-all-endpoints" && "$option" == "true" ]]; then
