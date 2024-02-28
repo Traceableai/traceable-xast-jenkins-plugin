@@ -54,7 +54,5 @@ do
   fi
   iterator=$((iterator + 1))
 done
-
-echo "$scanInitCmd"
 # Run the command
 eval "$scanInitCmd"

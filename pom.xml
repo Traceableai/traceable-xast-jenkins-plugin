@@ -82,7 +82,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.28</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.aspose</groupId>
@@ -100,7 +100,7 @@
         <repository>
             <id>snapshots</id>
             <name>repo</name>
-            <url>http://repository.aspose.com/repo/</url>
+            <url>https://repository.aspose.com/repo/</url>
         </repository>
     </repositories>
     <pluginRepositories>

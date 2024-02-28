@@ -38,7 +38,5 @@ do
   iterator=$((iterator + 1))
 done
 
-echo "$scanRunCmd"
-
 # Run the command
 eval "$scanRunCmd"
