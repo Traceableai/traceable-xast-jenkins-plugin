@@ -25,12 +25,12 @@ traceableCliBinaryLocation=$1
 #fi
 
 scanInitCmd=$traceableCliBinaryLocation' ast scan initAndRun'
-optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection' '--postman-environment' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names' '--include-all-endpoints' '--xast-replay' '--should-upload-logs')
+optionsArr=('--scan-name' '--traffic-env' '--token' '--attack-policy' '--plugins' '--include-url-regex' '--exclude-url-regex' '--target-url' '--traceable-server' '--idle-timeout' '--scan-timeout' '--max-retries' '--openapi-spec-ids' '--openapi-spec-files' '--postman-collection-id' '--postman-environment-id' '--scan-suite' '--include-service-ids' '--include-endpoint-ids' '--include-endpoint-labels' '--hook-names' '--include-all-endpoints' '--xast-replay' '--should-upload-logs')
 stringArr=('--include-url-regex' '--exclude-url-regex' )
 
 #Iterating the options available from options array and filling them with the arguments received in order
 iterator=0
-for option in "${@:5:27}"
+for option in "${@:5:28}"
 do
   # Check for "--include-all-endpoints" and its value separately
   if [[ "${optionsArr[$iterator]}" == "--include-all-endpoints" && "$option" == "true" ]]; then

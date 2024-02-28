@@ -13,6 +13,7 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -103,6 +104,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
             x.close();
             StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
             for(int i=0;i<args.length;i++) {
+                if(!StringUtils.isEmpty(args[i])) args[i] = args[i].replace(" ","");
                 if(args[i]!=null && !args[i].equals(""))
                     execScript.append(" ").append(args[i]);
                 else execScript.append(" ''");

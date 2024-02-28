@@ -17,6 +17,7 @@ import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -423,6 +424,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         x.close();
             String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
         for(int i=0;i<args.length;i++) {
+            if(!StringUtils.isEmpty(args[i])) args[i] = args[i].replace(" ","");
             if(args[i]!=null && !args[i].equals(""))
                 execScript = new StringBuffer().append(execScript).append(" ").append(args[i]).toString();
             else execScript = new StringBuffer().append(execScript).append(" ''").toString();

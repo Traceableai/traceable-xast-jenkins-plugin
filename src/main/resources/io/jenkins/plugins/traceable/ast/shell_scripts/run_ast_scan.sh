@@ -30,7 +30,7 @@ scanRunCmd=$traceableCliBinaryLocation' ast scan run'
 optionsArr=('--token'  '--idle-timeout' '--max-retries' '--should-upload-logs')
 
 iterator=0
-for option in "${@:2:4}"
+for option in "${@:2:5}"
 do
   if [ -z "$option" ] || [ "$option" = "''" ]; then
     echo "${optionsArr[$iterator]}" is Null

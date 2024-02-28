@@ -56,18 +56,19 @@
             <f:entry title="OpenApiSpecIds (comma separated)">
                 <f:textbox field="openApiSpecIds"/>
             </f:entry>
-
+            <f:entry title="OR">
+            </f:entry>
             <f:entry title="OpenApiSpecFiles (comma separated)">
                 <f:textbox field="openApiSpecFiles"/>
             </f:entry>
         </f:radioBlock>
 
         <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="${instance.trafficType.name() == 'DAST_POSTMAN_COLLECTION' ? 'true':null}" title="${%PostManCollection}" inline="true">
-            <f:entry title="PostmanCollection (comma separated)">
+            <f:entry title="PostmanCollectionId">
                 <f:textbox field="postmanCollection" value="${descriptor.doCheckField(value)}"/>
             </f:entry>
 
-            <f:entry title="PostmanEnvironment (comma separated)">
+            <f:entry title="PostmanEnvironmentId">
                 <f:textbox field="postmanEnvironment"/>
             </f:entry>
         </f:radioBlock>
