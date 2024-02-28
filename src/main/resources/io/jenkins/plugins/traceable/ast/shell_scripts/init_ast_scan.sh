@@ -40,9 +40,7 @@ do
   # Check for "--xast-replay" and its value separately
   elif [[ "${optionsArr[$iterator]}" == "--xast-replay" && "$option" == "true" ]]; then
     scanInitCmd="$scanInitCmd ${optionsArr[$iterator]}"
-  elif [ -z "$option" ] || [ "$option" = "''" ] || [ "$option" == "false" ]; then
-    echo "${optionsArr[$iterator]} is Null"
-  else
+  elif ! [ -z "$option" ] && ! [ "$option" = "''" ] && ! [ "$option" == "false" ]; then
     presentInStringArr=0
     for subOption in "${stringArr[@]}"
     do

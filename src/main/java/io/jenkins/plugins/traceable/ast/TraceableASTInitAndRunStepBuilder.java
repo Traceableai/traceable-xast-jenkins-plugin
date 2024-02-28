@@ -59,8 +59,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     private String suiteName;
 
-    private Boolean shouldUploadLogs;
-
     private String includeEndpointLabels;
 
     private String includeEndpointIds;
@@ -128,10 +126,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     public String getSuiteName() {
         return suiteName;
-    }
-
-    public Boolean getShouldUploadLogs() {
-        return shouldUploadLogs;
     }
 
     public String getIncludeEndpointLabels() {
@@ -253,11 +247,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     @DataBoundSetter
     public void setSuiteName(String suiteName) {
         this.suiteName = suiteName;
-    }
-
-    @DataBoundSetter
-    public void setShouldUploadLogs(Boolean shouldUploadLogs) {
-        this.shouldUploadLogs = shouldUploadLogs;
     }
 
     @DataBoundSetter
@@ -395,8 +384,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             includeEndpointLabels,
             hookName,
             allEndPoint,
-            replay,
-            Boolean.toString(shouldUploadLogs)
+            replay
           };
         runScript(scriptPath, args, listener, "runAndInitScan");
     }

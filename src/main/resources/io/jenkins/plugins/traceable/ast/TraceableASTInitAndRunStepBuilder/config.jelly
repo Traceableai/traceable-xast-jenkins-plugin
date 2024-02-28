@@ -112,9 +112,5 @@
             <f:textbox field="hookName"/>
         </f:entry>
 
-        <f:entry title="${%UploadLogs}">
-            <f:checkbox field="shouldUploadLogs" checked="${instance.shouldUploadLogs}" />
-        </f:entry>
-
     </f:advanced>
 </j:jelly>
