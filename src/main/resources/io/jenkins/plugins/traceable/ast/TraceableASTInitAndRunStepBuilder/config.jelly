@@ -11,7 +11,7 @@
     <f:entry title="${%ClientToken} *">
         <f:password field="clientToken"/>
     </f:entry>
-    <f:entry name="cliSource" title="${%CliSource}" field="cliSource">
+    <f:entry title="${%CliSource}" field="cliSource">
         <select name="cliSource">
             <option value="download" selected="${instance.cliSource.equals('download') || $instance.cliSource.equals(null)? 'true':null}">   Download cli (specify the version, by default latest cli will be downloaded   </option>
             <option value="localpath" selected="${instance.cliSource.equals('localpath')? 'true':null}">   Give the local absolute path of cli binary   </option>
@@ -21,13 +21,59 @@
             <f:textbox field="cliField"/>
         </f:entry>
     </f:block>
-    <f:entry></f:entry>
-    <f:entry title="${%PolicyName}">
-        <f:textbox field="policyName" />
+    <f:entry title="${%AttackPolicy}">
+        <f:textbox field="attackPolicy" />
     </f:entry>
-    <f:entry title="${%ScanEvalCriteria}">
-        <f:textarea field="scanEvalCriteria"/>
+    <f:entry title="${%SuiteName}">
+        <f:textbox field="suiteName"/>
     </f:entry>
+
+    <f:entry title="${%SelectAssets}" field="assets">
+        <f:radioBlock name="assets" value="AllEndpoints" checked="${instance.assets == null || instance.assets.name() == 'AllEndpoints' ? 'true':null}" title="${%AllEndpoints}" inline="true"/>
+        <f:radioBlock name="assets" value="EndpointLabels" checked="${instance.assets.name() == 'EndpointLabels' ? 'true':null}" title="${%EndpointLabels}" inline="true">
+            <f:entry title="Include Endpoint Labels (comma separated)">
+                <f:textbox field="includeEndpointLabels"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="EndpointIds" checked="${instance.assets.name() == 'EndpointIds' ? 'true':null}" title="${%EndpointIds}" inline="true">
+            <f:entry title="Include Endpoint IDs (comma separated)">
+                <f:textbox field="includeEndpointIds"/>
+            </f:entry>
+        </f:radioBlock>
+        <f:radioBlock name="assets" value="ServiceIds" checked="${instance.assets.name() == 'ServiceIds' ? 'true':null}" title="${%ServiceIds}" inline="true">
+            <f:entry title="Include Service IDs (comma separated)">
+                <f:textbox field="includeServiceIds"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+    <f:entry title="${%TrafficType}" field="trafficType">
+        <f:radioBlock name="trafficType"  value="XAST_LIVE" checked="${instance.trafficType == null || instance.trafficType.name() == 'XAST_LIVE' ? 'true':null}" title="${%LiveTraffic}" inline="true"/>
+        <f:radioBlock name="trafficType" value="XAST_REPLAY" checked="${instance.trafficType.name() == 'XAST_REPLAY' ? 'true':null}" title="${%ReplayTraffic}" inline="true"/>
+
+        <f:radioBlock name="trafficType" value="DAST_OPEN_API_SPECS" checked="${instance.trafficType.name() == 'DAST_OPEN_API_SPECS' ? 'true':null}" title="${%OpenApiSpecs}" inline="true">
+            <f:entry title="OpenApiSpecIds (comma separated)">
+                <f:textbox field="openApiSpecIds"/>
+            </f:entry>
+            <f:entry title="OR">
+            </f:entry>
+            <f:entry title="OpenApiSpecFiles (comma separated)">
+                <f:textbox field="openApiSpecFiles"/>
+            </f:entry>
+        </f:radioBlock>
+
+        <f:radioBlock name="trafficType" value="DAST_POSTMAN_COLLECTION" checked="${instance.trafficType.name() == 'DAST_POSTMAN_COLLECTION' ? 'true':null}" title="${%PostManCollection}" inline="true">
+            <f:entry title="PostmanCollectionId">
+                <f:textbox field="postmanCollection" value="${descriptor.doCheckField(value)}"/>
+            </f:entry>
+
+            <f:entry title="PostmanEnvironmentId">
+                <f:textbox field="postmanEnvironment"/>
+            </f:entry>
+        </f:radioBlock>
+    </f:entry>
+
+
     <f:advanced>
         <f:entry title="${%PluginsToInclude} (comma seperated)" help="/plugin/traceable/field-help/Plugins.html">
             <f:textbox field="pluginsToInclude"/>
@@ -53,18 +99,6 @@
         <f:entry title="${%MaxRetries}">
             <f:textbox field="maxRetries"/>
         </f:entry>
-        <f:entry title="${%OpenApiSpecIds} (comma seperated)">
-            <f:textbox field="openApiSpecIds"/>
-        </f:entry>
-        <f:entry title="${%OpenApiSpecFiles} (comma seperated)">
-            <f:textbox field="openApiSpecFiles"/>
-        </f:entry>
-        <f:entry title="${%PostmanCollection}">
-            <f:textbox field="postmanCollection"/>
-        </f:entry>
-        <f:entry title="${%PostmanEnvironment}">
-            <f:textbox field="postmanEnvironment"/>
-        </f:entry>
         <f:entry title="${%CaFileName}">
             <f:textbox field="traceableRootCaFileName"/>
         </f:entry>
@@ -74,5 +108,9 @@
         <f:entry title="${%CliKeyFileName}">
             <f:textbox field="traceableCliKeyFileName"/>
         </f:entry>
+        <f:entry title="${%HookName} (comma separated)">
+            <f:textbox field="hookName"/>
+        </f:entry>
+
     </f:advanced>
 </j:jelly>
