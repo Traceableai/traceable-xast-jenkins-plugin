@@ -103,5 +103,8 @@
         <f:entry title="${%CliKeyFileName}" field="traceableCliKeyFileName">
             <f:textbox />
         </f:entry>
+        <f:entry title="${%HookName} (comma separated)">
+            <f:textbox field="hookName"/>
+        </f:entry>
     </f:advanced>
 </j:jelly>
