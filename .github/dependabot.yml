@@ -1,12 +1,17 @@
 # https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
-version: 2
+version: 1
 updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    labels:
+      - "skip-changelog"

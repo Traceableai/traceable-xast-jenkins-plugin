@@ -13,33 +13,56 @@
     <packaging>hpi</packaging>
     <name>Traceable Plugin</name>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <inceptionYear>2024</inceptionYear>
+
     <licenses>
         <license>
             <name>MIT License</name>
             <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
-    <!-- If you want this to appear on the plugin site page:
     <developers>
         <developer>
-            <id>bhacker</id>
-            <name>Bob Q. Hacker</name>
-            <email>bhacker@nowhere.net</email>
+            <id>dhruv-singhal-github</id>
+            <name>Dhruv Singhal</name>
         </developer>
-    </developers> -->
+    </developers>
 
     <scm>
         <connection>scm:git:https://github.com/${gitHubRepo}</connection>
         <developerConnection>scm:git:https://github.com/${gitHubRepo}</developerConnection>
         <tag>${scmTag}</tag>
         <url>https://github.com/${gitHubRepo}</url>
-    </scm>    <properties>
+    </scm>
+    <properties>
         <revision>1.0</revision>
         <changelist>-SNAPSHOT</changelist>
 
         <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
         <jenkins.version>2.332.4</jenkins.version>
-        <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>    </properties>
+        <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+        <tagNameFormat>v@{project.version}</tagNameFormat>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+        <repository>
+            <id>AsposeJavaAPI</id>
+            <name>Aspose Java API</name>
+            <url>https://repository.aspose.com/repo/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
 
     <dependencyManagement>
         <dependencies>
@@ -87,29 +110,9 @@
         <dependency>
             <groupId>com.aspose</groupId>
             <artifactId>aspose-html</artifactId>
-            <version>20.9.1</version>
-            <classifier>jdk16</classifier>
+            <version>24.5</version>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </repository>
-        <repository>
-            <id>snapshots</id>
-            <name>repo</name>
-            <url>https://repository.aspose.com/repo/</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
-
 
     <build>
         <plugins>
@@ -127,6 +130,15 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <fixTags>param,return,throws,link</fixTags>
+                    <author>false</author>
+                    <force>true</force>
+                </configuration>
             </plugin>
         </plugins>
     </build>

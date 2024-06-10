@@ -1,16 +1,16 @@
 # Traceable API Security Testing Plugin
-
-## Introduction
+<img>![img.png](img.png)</img>
+# Introduction
 <p align="justify">
 In the world full of microservices, there are cosmic number of APIs that a single organization exposes for internal and external use. But with the advantage of APIs making microservices architecture possible, there also comes the downside of data abuse, exposure and security. More the APIs exposed, an organization becomes more and more vulnerable to API attacks such as the <a href="https://owasp.org/www-project-top-ten/">OWASPs Top 10</a>. To solve this problem <a href="www.traceable.ai">TRACEABLE AI</a> helps you by continuously securing your APIs, bringing you deep visibility, real-time protection, and threat analytics. Traceable AI combines distributed tracing and advanced context-based behavioral analytics to deliver modern API security to your cloud-native and API-based applications.
 </p>
 
-### What is AST?
+## What is AST?
 <p align="justify">
 <b>API Security Testing</b> helps in finding vulnerabilities in very early stages, giving developers and Product security engineers more time and context to prioritize mitigation of vulnerabilities and build the resilient systems by scanning APIs for vulnerabilities by changing the data in the existing api specifications as required to introduce vulnerabilities.
 </p>
 
-### Features
+## Features
 <li>Extensive security testing coverage for microservices and APIs.</li>
 <li>Generate tests from - Live traffic, OpenAPI Specs or even Recorded traces.</li> 
 <li>Insertion into DevSecOps with Scan initiation and Vulnerability Management.</li>
@@ -19,7 +19,7 @@ In the world full of microservices, there are cosmic number of APIs that a singl
 
 
 
-## 1. Installation
+### 1. Installation
 This Jenkins plugin for AST allows to run AST scan as a job on local jenkins instance.
 
 <ol>
@@ -28,7 +28,7 @@ This Jenkins plugin for AST allows to run AST scan as a job on local jenkins ins
 <li>Install the plugin.</li>
 </ol>
 
-## 2. Get Scan Token
+### 2. Get Scan Token
 
 To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and login.
 <ol>
@@ -39,7 +39,7 @@ To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and l
 
 <img src="src/main/webapp/img/Readme_get_token.png"/>
 
-## 3. Add Build Step
+### 3. Add Build Step
 
 
 <ol>
@@ -55,7 +55,7 @@ Client Token and Traffic environment are required fields and Client Token is the
 <p></p>
 <img src="src/main/webapp/img/Readme_add_configuration.png"/>
 
-## 4. View Traceable AST Report
+### 4. View Traceable AST Report
 
 <ol>
 <li>Build a job, which will run a scan according to the configurations.</li>
@@ -118,6 +118,30 @@ The scan report shows the number of vulnerabilities found for each type of plugi
 <td>Maximum time a scan is executed,scan is stopped after scan timeout</td>
 </tr>
 </table>
+
+# Compiling and testing the plugin
+
+Compile and run the plugin automated tests on Java 11 or Java 17 with:
+
+* `mvn clean verify`
+
+Run the plugin inside a Jenkins environment with <a href="https://jenkinsci.github.io/maven-hpi-plugin/run-mojo.html">Maven HPI Plugin</a>
+
+* `mvn -Djetty.port=8080 hpi:run`
+### Code coverage reporting
+
+Code coverage reporting is available as a maven target.
+Please improve code coverage with tests when you submit.
+
+* `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
+
+### Code formatting
+
+Source code and pom file formatting is maintained by the `spotless` maven plugin.
+Before submitting a pull request, confirm the formatting is correct with:
+
+* `mvn spotless:apply`
+
 
 
 

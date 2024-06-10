@@ -1,15 +1,34 @@
-target
-
-# mvn hpi:run
-work
-
-# IntelliJ IDEA project files
 *.iml
-*.iws
 *.ipr
-.idea
+*.iws
+.idea/
 
-# Eclipse project files
-.settings
-.classpath
+target/
+work/
+.@tmp/
+.vs/
+.vscode/
+
 .project
+.classpath
+.settings/
+
+# Java microbenchmark harness results file
+/jmh-report.json
+
+/nb-configuration.xml
+
+# Vim
+*.swp
+Session.vim
+
+# Exhuberant ctags
+tags
+
+# emacs files
+*~
+/nbproject/
+/TAGS
+
+# Mac OSX
+.DS_Store
