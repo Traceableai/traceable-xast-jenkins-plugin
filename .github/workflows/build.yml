@@ -20,7 +20,11 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-
+          distribution: 'adopt'
+          server-id: github
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+          overwrite-settings: true
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
