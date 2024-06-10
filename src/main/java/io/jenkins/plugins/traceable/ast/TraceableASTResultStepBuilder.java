@@ -9,19 +9,16 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import java.io.IOException;
-
 
 public class TraceableASTResultStepBuilder extends Builder implements SimpleBuildStep {
     private static String clientToken;
 
     @DataBoundConstructor
-    public TraceableASTResultStepBuilder() {
-    }
+    public TraceableASTResultStepBuilder() {}
 
     public static String getClientToken() {
         return clientToken;
@@ -33,13 +30,17 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         if (TraceableASTInitAndRunStepBuilder.getClientToken() != null) {
-            while (TraceableASTInitAndRunStepBuilder.getScanEnded() == null || !TraceableASTInitAndRunStepBuilder.getScanEnded()) {
+            while (TraceableASTInitAndRunStepBuilder.getScanEnded() == null
+                    || !TraceableASTInitAndRunStepBuilder.getScanEnded()) {
                 Thread.sleep(15000);
                 listener.getLogger().println("Scan Running waiting for scan to end");
             }
-            if(TraceableASTInitAndRunStepBuilder.getScanId() == null) { return; }
+            if (TraceableASTInitAndRunStepBuilder.getScanId() == null) {
+                return;
+            }
             run.addAction(new TraceableASTGenerateReportAction(
                     TraceableASTInitAndRunStepBuilder.getTraceableCliBinaryLocation(),
                     TraceableASTInitAndRunStepBuilder.getScanId(),
@@ -47,10 +48,11 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     TraceableASTInitAndRunStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliCertFileName(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName()));
-        }
-        else if(TraceableASTInitStepBuilder.getClientToken() != null) {
+        } else if (TraceableASTInitStepBuilder.getClientToken() != null) {
             while (TraceableASTInitStepBuilder.getScanEnded() == null || !TraceableASTInitStepBuilder.getScanEnded()) {}
-            if(TraceableASTRunStepBuilder.getScanId() == null) { return; }
+            if (TraceableASTRunStepBuilder.getScanId() == null) {
+                return;
+            }
             run.addAction(new TraceableASTGenerateReportAction(
                     TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
                     TraceableASTRunStepBuilder.getScanId(),
@@ -59,8 +61,6 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
                     TraceableASTInitStepBuilder.getTraceableCliKeyFileName()));
         }
-
-
     }
 
     @Extension
@@ -77,7 +77,5 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
         public String getDisplayName() {
             return STEP_NAME;
         }
-
     }
 }
-

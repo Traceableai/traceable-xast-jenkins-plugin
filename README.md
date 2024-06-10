@@ -135,6 +135,7 @@ Please improve code coverage with tests when you submit.
 
 * `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
 
+
 ### Code formatting
 
 Source code and pom file formatting is maintained by the `spotless` maven plugin.
