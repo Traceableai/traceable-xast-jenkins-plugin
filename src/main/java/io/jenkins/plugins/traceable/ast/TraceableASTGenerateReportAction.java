@@ -5,9 +5,6 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import hudson.model.Result;
 import hudson.model.Run;
-import jenkins.model.RunAction2;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -17,6 +14,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import jenkins.model.RunAction2;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TraceableASTGenerateReportAction implements RunAction2 {
@@ -30,7 +29,13 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private String traceableCliCertFileName;
     private String traceableCliKeyFileName;
 
-    public TraceableASTGenerateReportAction( String traceableCliBinaryLocation, String scanId, String clientToken, String traceableRootCaFileName, String traceableCliCertFileName, String traceableCliKeyFileName) {
+    public TraceableASTGenerateReportAction(
+            String traceableCliBinaryLocation,
+            String scanId,
+            String clientToken,
+            String traceableRootCaFileName,
+            String traceableCliCertFileName,
+            String traceableCliKeyFileName) {
         this.traceableCliBinaryLocation = traceableCliBinaryLocation;
         this.scanId = scanId;
         this.clientToken = clientToken;
@@ -44,49 +49,49 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         this.run = r;
         String scriptPath = "shell_scripts/show_ast_scan.sh";
         String[] args = null;
-            args =
-                    new String[] {
-                            traceableCliBinaryLocation,
-                            scanId,
-                            clientToken,
-                            traceableRootCaFileName,
-                            traceableCliCertFileName,
-                            traceableCliKeyFileName
-                    };
+        args = new String[] {
+            traceableCliBinaryLocation,
+            scanId,
+            clientToken,
+            traceableRootCaFileName,
+            traceableCliCertFileName,
+            traceableCliKeyFileName
+        };
         runScript(scriptPath, args);
-
     }
 
     private void runScript(String scriptPath, String[] args) {
-        try{
+        try {
             // Read the bundled script as string
             String bundledScript = CharStreams.toString(
                     new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
             // Create a temp file with uuid appended to the name just to be safe
             File tempFile = File.createTempFile("script_" + UUID.randomUUID().toString(), ".sh");
             // Write the string to temp file
-            BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
+            BufferedWriter x = Files.newWriter(tempFile, Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            String execScript = new StringBuffer().append("/bin/bash ").append(tempFile.getAbsolutePath()).toString();
-            for(int i=0;i<args.length;i++) {
-                if(args[i]!=null && !args[i].equals(""))
-                    execScript += " " + args[i];
+            String execScript = new StringBuffer()
+                    .append("/bin/bash ")
+                    .append(tempFile.getAbsolutePath())
+                    .toString();
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] != null && !args[i].equals("")) execScript += " " + args[i];
                 else execScript += " ''";
             }
             Process pb = Runtime.getRuntime().exec(execScript);
             logOutput(pb.getInputStream());
-//            logOutput(pb.getErrorStream());
+            //            logOutput(pb.getErrorStream());
             pb.waitFor();
             int reportCmdExitValue = pb.exitValue();
             boolean deleted_temp = tempFile.delete();
-            if(reportCmdExitValue == 4) {
+            if (reportCmdExitValue == 4) {
                 run.setResult(Result.FAILURE);
             }
-            if(!deleted_temp) {
+            if (!deleted_temp) {
                 throw new FileNotFoundException("Temp file not found");
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);
             e.printStackTrace();
         }
@@ -112,26 +117,31 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         return "traceable_ast_report";
     }
 
-    public Run getRun() { return run; }
+    public Run getRun() {
+        return run;
+    }
 
-    public String getHtmlReport() { return htmlReport; }
+    public String getHtmlReport() {
+        return htmlReport;
+    }
 
     private void logOutput(InputStream inputStream) {
-            Scanner scanner = new Scanner(inputStream, "UTF-8");
-            StringBuilder report = new StringBuilder();
-            while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    report.append(line).append("\n");
-                    System.out.println(line);
-            }
-            scanner.close();
-            Pattern REPORT_PATTERN = Pattern.compile("<.*",Pattern.DOTALL);
-            Matcher m = REPORT_PATTERN.matcher(report.toString());
-            if(m.find()) {
-               String markdownReport =  m.group();
-               htmlReport = createHtmlReport(markdownReport);
-            }
+        Scanner scanner = new Scanner(inputStream, "UTF-8");
+        StringBuilder report = new StringBuilder();
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            report.append(line).append("\n");
+            System.out.println(line);
+        }
+        scanner.close();
+        Pattern REPORT_PATTERN = Pattern.compile("<.*", Pattern.DOTALL);
+        Matcher m = REPORT_PATTERN.matcher(report.toString());
+        if (m.find()) {
+            String markdownReport = m.group();
+            htmlReport = createHtmlReport(markdownReport);
+        }
     }
+
     private String createHtmlReport(String markdown) {
         try {
             File mdTempFile = new File("md_temp.md");
@@ -139,10 +149,10 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 
             // Prepare a file path for output
             String home = System.getProperty("user.home");
-            java.nio.file.Files.createDirectories(Paths.get(home , "/.traceable_jenkins"));
+            java.nio.file.Files.createDirectories(Paths.get(home, "/.traceable_jenkins"));
 
             // Creating an instance of file
-            Path htmlFilePath = Paths.get(home , "/.traceable_jenkins/", run.getId(),"_report.html");
+            Path htmlFilePath = Paths.get(home, "/.traceable_jenkins/", run.getId(), "_report.html");
 
             // Convert Markdown to HTML
 
@@ -162,9 +172,9 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
 
     private String readFile(Path filePath) {
         try {
-                InputStream is = java.nio.file.Files.newInputStream(filePath);
-                InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-                BufferedReader br = new BufferedReader(isr);
+            InputStream is = java.nio.file.Files.newInputStream(filePath);
+            InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+            BufferedReader br = new BufferedReader(isr);
             return br.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -175,12 +185,11 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private void writeToFile(File file, String data) {
         FileWriter fw = null;
         try {
-            fw = new FileWriter(file,true);
-        fw.append(data);
-        fw.close();
+            fw = new FileWriter(file, true);
+            fw.append(data);
+            fw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    }
+}
