@@ -117,7 +117,53 @@ The scan report shows the number of vulnerabilities found for each type of plugi
 <td><span style="color:Orange">Scan Timeout</span> (optional)</td>
 <td>Maximum time a scan is executed,scan is stopped after scan timeout</td>
 </tr>
+<tr>
+<td><span style="color:Orange">Scan Suite</span> (optional)</td>
+<td>Name of the Scan Suite to run the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Include All Endpoints</span> (default asset selected)</td>
+<td>All endpoints targeted during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Include Endpoint Ids</span> (commas separated)</td>
+<td>Specific endpoints ids targeted during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Include Endpoint Labels</span> (commas separated)</td>
+<td>Specific endpoint labels targeted during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Include Service Ids</span> (commas separated)</td>
+<td>Specific service ids targeted during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">XAST Replay</span> </td>
+<td>Replay traffic type used during the scan </td>
+</tr>
+<tr>
+<td><span style="color:Orange">Open Api Spec Ids</span> (commas separated)</td>
+<td>List of open api spec file ids for generating traffic used during the scan </td>
+</tr>
+<tr>
+<td><span style="color:Orange">Postman Collection Ids</span> (commas separated)</td>
+<td>Postman collection file IDs for generating traffic during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Postman Environment Ids</span> (commas separated)</td>
+<td>Postman environment file IDs with target URLs and traffic environments configuration used during the scan</td>
+</tr>
+<tr>
+<td><span style="color:Orange">Hook Names</span> (optional)</td>
+<td>Authentication hook to mutate request headers during scan</td>
+</tr>
 </table>
+<h3>NOTES:</h3>
+<ul>
+  <li>Only one type of asset (All Endpoints, Endpoint Ids, Service Ids, Endpoint label names) can be selected  during scan </li>
+  <li>Only one type of traffic (XAST Replay, Open Api Spec Ids,  Postman Collection Ids, Postman Environment Ids) scan be used during scan. By default live traffic will be selected</li>
+  <li>Provide the suite name to run the suite scan</li>
+</ul>
 
 # Compiling and testing the plugin
 
