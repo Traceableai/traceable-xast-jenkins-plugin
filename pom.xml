@@ -8,7 +8,7 @@
     <relativePath />
   </parent>
   <groupId>io.jenkins.plugins</groupId>
-  <artifactId>traceable</artifactId>
+  <artifactId>traceable-plugin</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Traceable Plugin</name>
