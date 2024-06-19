@@ -5,6 +5,7 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.util.Secret;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -24,7 +25,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private transient Run run;
     private String traceableCliBinaryLocation;
     private String scanId;
-    private String clientToken;
+    private Secret clientToken;
     private String traceableRootCaFileName;
     private String traceableCliCertFileName;
     private String traceableCliKeyFileName;
@@ -32,7 +33,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     public TraceableASTGenerateReportAction(
             String traceableCliBinaryLocation,
             String scanId,
-            String clientToken,
+            Secret clientToken,
             String traceableRootCaFileName,
             String traceableCliCertFileName,
             String traceableCliKeyFileName) {
@@ -52,7 +53,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         args = new String[] {
             traceableCliBinaryLocation,
             scanId,
-            clientToken,
+            clientToken.getPlainText(),
             traceableRootCaFileName,
             traceableCliCertFileName,
             traceableCliKeyFileName

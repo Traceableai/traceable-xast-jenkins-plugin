@@ -9,23 +9,24 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.Secret;
 import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 public class TraceableASTResultStepBuilder extends Builder implements SimpleBuildStep {
-    private static String clientToken;
+    private static Secret clientToken;
 
     @DataBoundConstructor
     public TraceableASTResultStepBuilder() {}
 
-    public static String getClientToken() {
+    public static Secret getClientToken() {
         return clientToken;
     }
 
     @DataBoundSetter
-    public static void setClientToken(String clientToken) {
+    public static void setClientToken(Secret clientToken) {
         TraceableASTResultStepBuilder.clientToken = clientToken;
     }
 

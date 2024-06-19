@@ -70,7 +70,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
         String scriptPath = "shell_scripts/run_ast_scan.sh";
         String[] args = new String[] {
             TraceableASTInitStepBuilder.getTraceableCliBinaryLocation(),
-            TraceableASTInitStepBuilder.getClientToken(),
+            TraceableASTInitStepBuilder.getClientToken().getPlainText(),
             idleTimeout,
             maxRetries,
             TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
