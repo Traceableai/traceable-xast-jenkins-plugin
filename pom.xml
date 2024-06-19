@@ -11,7 +11,7 @@
   <artifactId>traceable</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
-  <name>Traceable Plugin</name>
+  <name>traceable-plugin</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
   <inceptionYear>2024</inceptionYear>
 
@@ -39,7 +39,7 @@
     <changelist>-SNAPSHOT</changelist>
 
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.version>2.361</jenkins.version>
+    <jenkins.version>2.440.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <tagNameFormat>v@{project.version}</tagNameFormat>
   </properties>
