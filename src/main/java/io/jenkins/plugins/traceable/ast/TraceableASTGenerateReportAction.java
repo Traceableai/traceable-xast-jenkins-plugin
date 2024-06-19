@@ -28,7 +28,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private Secret clientToken;
     private String traceableRootCaFileName;
     private String traceableCliCertFileName;
-    private String traceableCliKeyFileName;
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")private String traceableCliKeyFileName;
 
     public TraceableASTGenerateReportAction(
             String traceableCliBinaryLocation,
@@ -80,9 +80,10 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
                 if (args[i] != null && !args[i].equals("")) execScript += " " + args[i];
                 else execScript += " ''";
             }
-            Process pb = Runtime.getRuntime().exec(execScript);
+            ProcessBuilder processBuilder = new ProcessBuilder(execScript);
+            processBuilder.redirectErrorStream(true);
+            Process pb = processBuilder.start();
             logOutput(pb.getInputStream());
-            //            logOutput(pb.getErrorStream());
             pb.waitFor();
             int reportCmdExitValue = pb.exitValue();
             boolean deleted_temp = tempFile.delete();

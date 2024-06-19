@@ -28,5 +28,8 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
+      - name: Run Spotbugs check
+        run: mvn spotbugs:spotbugs
+
       - name: Run Spotless checks
         run: mvn spotless:check

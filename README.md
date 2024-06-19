@@ -125,6 +125,19 @@ Compile and run the plugin automated tests on Java 11 or Java 17 with:
 
 * `mvn clean verify`
 
+### Code spotbugs check 
+
+Check code for bugs:
+
+* `mvn spotbugs:spotbugs`
+
+### Code formatting
+
+Source code and pom file formatting is maintained by the `spotless` maven plugin.
+Before submitting a pull request, confirm the formatting is correct with:
+
+* `mvn spotless:apply`
+
 Run the plugin inside a Jenkins environment with <a href="https://jenkinsci.github.io/maven-hpi-plugin/run-mojo.html">Maven HPI Plugin</a>
 
 * `mvn -Djetty.port=8080 hpi:run`
@@ -134,14 +147,6 @@ Code coverage reporting is available as a maven target.
 Please improve code coverage with tests when you submit.
 
 * `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
-
-
-### Code formatting
-
-Source code and pom file formatting is maintained by the `spotless` maven plugin.
-Before submitting a pull request, confirm the formatting is correct with:
-
-* `mvn spotless:apply`
 
 
 

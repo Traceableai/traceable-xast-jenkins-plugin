@@ -122,7 +122,8 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
                     execScript.append(" ").append(args[i]);
                 else execScript.append(" ''");
             }
-            Process pb = Runtime.getRuntime().exec(execScript.toString());
+            ProcessBuilder processBuilder = new ProcessBuilder(execScript.toString());
+            Process pb = processBuilder.start();
             if (printLogsToConsole) {
                 logOutput(pb.getInputStream(), "", listener);
                 logOutput(pb.getErrorStream(), "Error: ", listener);
