@@ -11,6 +11,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.io.*;
@@ -27,7 +28,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     private String scanName;
     private String testEnvironment;
-    private static String clientToken;
+    private static Secret clientToken;
     private String attackPolicy;
     private String openApiSpecIds;
     private String openApiSpecFiles;
@@ -87,7 +88,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         return testEnvironment;
     }
 
-    public static String getClientToken() {
+    public static Secret getClientToken() {
         return clientToken;
     }
 
@@ -216,7 +217,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     @DataBoundSetter
-    public static void setClientToken(String clientToken) {
+    public static void setClientToken(Secret clientToken) {
         TraceableASTInitAndRunStepBuilder.clientToken = clientToken;
     }
 
@@ -434,7 +435,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             traceableCliKeyFileName,
             scanName,
             testEnvironment,
-            clientToken,
+            clientToken.getPlainText(),
             attackPolicy,
             pluginsToInclude,
             includeUrlRegex,
