@@ -497,7 +497,9 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                     execScript =
                             new StringBuffer().append(execScript).append(" ''").toString();
             }
-            Process pb = Runtime.getRuntime().exec(execScript);
+            ProcessBuilder processBuilder = new ProcessBuilder(execScript);
+            processBuilder.redirectErrorStream(true);
+            Process pb = processBuilder.start();
             logOutput(pb.getInputStream(), "", listener, caller);
             if (!caller.equals("downloadTraceableCliBinary")) {
                 logOutput(pb.getErrorStream(), "Error: ", listener, caller);
