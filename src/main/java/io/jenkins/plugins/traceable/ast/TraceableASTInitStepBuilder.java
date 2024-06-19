@@ -458,8 +458,9 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
                     execScript =
                             new StringBuffer().append(execScript).append(" ''").toString();
             }
-            Process pb = Runtime.getRuntime().exec(execScript);
-            logOutput(pb.getInputStream(), "", listener);
+            ProcessBuilder processBuilder = new ProcessBuilder(execScript);
+            processBuilder.redirectErrorStream(true);
+            Process pb = processBuilder.start();
             if (!caller.equals("downloadTraceableCliBinary")) {
                 logOutput(pb.getErrorStream(), "Error: ", listener);
             }

@@ -105,7 +105,8 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
                     execScript.append(" ").append(args[i]);
                 else execScript.append(" ''");
             }
-            Process pb = Runtime.getRuntime().exec(execScript.toString());
+            ProcessBuilder processBuilder = new ProcessBuilder(execScript.toString());
+            Process pb = processBuilder.start();
             logOutput(pb.getInputStream(), "", listener, caller);
             logOutput(pb.getErrorStream(), "Error: ", listener, caller);
             pb.waitFor();
