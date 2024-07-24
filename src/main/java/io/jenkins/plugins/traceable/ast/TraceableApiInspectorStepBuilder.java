@@ -45,7 +45,8 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
 
     private String repoPath;
     private String specFilePath;
-    private String checksFilePath;
+    private  String traceableServer;
+    private String traceableToken;
     private String report ;
     public String getRepoPath() {
         return repoPath;
@@ -55,9 +56,8 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         return specFilePath;
     }
 
-    public String getChecksFilePath() {
-        return checksFilePath;
-    }
+    public String getTraceableServer() { return  traceableServer; }
+    public String getTraceableToken() { return  traceableToken; }
 
     @DataBoundSetter
     public void setRepoPath(String repoPath) {
@@ -69,10 +69,12 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         this.specFilePath = specFilePath;
     }
 
+
     @DataBoundSetter
-    public void setChecksFilePath(String checksFilePath) {
-        this.checksFilePath = checksFilePath;
-    }
+    public void setTraceableServer(String traceableServer) { this.traceableServer = traceableServer; }
+
+    @DataBoundSetter
+    public void setTraceableToken(String traceableToken) {this.traceableToken = traceableToken;}
 
     @DataBoundConstructor
     public TraceableApiInspectorStepBuilder() {
@@ -83,33 +85,35 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         report = "";
         String scriptPath = "shell_scripts/api_inspector.sh";
-        InputStream in = getClass().getResourceAsStream("shell_scripts/api_inspector");
         String repoWorkspacePath = workspace.getRemote();
-        String inspectorPath =   repoWorkspacePath + "/inspector";
-        try {
-            OutputStream out = new FileOutputStream(inspectorPath);
-            IOUtils.copy(in, out);
-            out.close();
-        } catch (Exception e) {
-            log.info("Error copying inspector file ",e);
+        if(!StringUtils.isBlank(repoPath)) {
+            repoWorkspacePath += repoPath;
         }
-        FilePath filePath = new FilePath(new File(inspectorPath));
-        filePath.chmod(0777);
         if(StringUtils.isBlank(specFilePath)) {
-            if(!StringUtils.isBlank(repoPath)) {
-                repoWorkspacePath += repoPath;
-            }
             String findSpecScriptPath = "shell_scripts/spec_finder.sh";
             String specFilePaths = runScript(findSpecScriptPath ,new String[]{repoWorkspacePath} , listener, false);
             String[] specFilePathsList = specFilePaths.split("\n");
-            if(specFilePathsList.length > 0) {
-                specFilePath =  specFilePathsList[0];
+            if(specFilePathsList.length==0) {
+                listener.getLogger().println("No Open Api Spec Found at " + repoWorkspacePath);
+            } else {
+                listener.getLogger().println("Found open api specs at" + repoWorkspacePath + " : \n" + specFilePaths);
             }
+
+            for (String specFile : specFilePathsList) {
+                String[] args = new String[]{
+                        traceableServer, traceableToken, specFile
+                };
+                String newOpenApiSpecString = "========================================\nUploading open api spec : " + specFile + "\n";
+                listener.getLogger().println(newOpenApiSpecString);
+                report += newOpenApiSpecString;
+                runScript(scriptPath, args, listener, true);
+            }
+        } else {
+            String[] args = new String[]{
+                    traceableServer, traceableToken, specFilePath
+            };
+            runScript(scriptPath, args, listener, true);
         }
-        String[] args = new String[]{
-                inspectorPath, specFilePath, checksFilePath
-        };
-        runScript(scriptPath , args, listener, true);
         run.addAction(new TraceableApiInspectorReportAction(report));
     }
 
@@ -125,13 +129,20 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
             BufferedWriter x = Files.newWriter(tempFile,  Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
-            for(int i=0;i<args.length;i++) {
-                if(args[i]!=null && !args[i].equals(""))
-                    execScript.append(" ").append(args[i]);
-                else execScript.append(" ''");
+            // Create an array for the command and its arguments
+            String[] command = new String[args.length + 2];
+            command[0] = "/bin/bash";
+            command[1] = tempFile.getAbsolutePath();
+
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] != null && !args[i].isEmpty()) {
+                    command[i + 2] = args[i];
+                } else {
+                    command[i + 2] = "";
+                }
             }
-            Process pb = Runtime.getRuntime().exec(execScript.toString());
+            // Execute the command
+            Process pb = Runtime.getRuntime().exec(command);
             if(printLogsToConsole) {
                 logOutput(pb.getInputStream(), "", listener);
                 logOutput(pb.getErrorStream(), "Error: ", listener);
