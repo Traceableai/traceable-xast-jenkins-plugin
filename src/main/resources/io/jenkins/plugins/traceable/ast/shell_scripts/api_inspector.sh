@@ -4,7 +4,6 @@ GRAPHQL_ENDPOINT="https://$1/graphql"
 API_ENDPOINT="https://$1/rest/v2/upload/documentation/openapi"
 PLATFORM_TOKEN="$2"
 SPEC_PATH="$3"
-echo $SPEC_PATH
 FILE_NAME=$(basename "$SPEC_PATH")
 GRAPHQL_QUERY='mutation {
   createApiSpec(

@@ -11,8 +11,8 @@
     </f:entry>
     <f:entry name="traceableServer" title="${%TraceableServer}" field="traceableServer">
         <select name="traceableServer">
-            <option value="api-dev.traceable.ai" selected="${instance.traceableServer.equals('app-dev.traceable.ai') || $instance.traceableServer.equals(null)? 'true':null}">        app-dev.traceable.ai       </option>
-            <option value="api.traceable.ai" selected="${instance.traceableServer.equals('app.traceable.ai')? 'true':null}">       app.traceable.ai       </option>
+            <option value="api-dev.traceable.ai" selected="${instance.traceableServer.equals('api-dev.traceable.ai') || $instance.traceableServer.equals(null)? 'true':null}">        app-dev.traceable.ai       </option>
+            <option value="api.traceable.ai" selected="${instance.traceableServer.equals('api.traceable.ai')? 'true':null}">       app.traceable.ai       </option>
         </select>
     </f:entry>
 </j:jelly>
