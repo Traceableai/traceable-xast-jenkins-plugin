@@ -73,16 +73,25 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
             throws InterruptedException, IOException {
         report = "";
         String scriptPath = "shell_scripts/api_inspector.sh";
-        InputStream in = getClass().getResourceAsStream("shell_scripts/api_inspector");
+        InputStream in = null;
+        OutputStream out = null;
         String repoWorkspacePath = workspace.getRemote();
         String inspectorPath = repoWorkspacePath + "/inspector";
         try {
-            OutputStream out = new FileOutputStream(inspectorPath);
+            in = getClass().getResourceAsStream("shell_scripts/api_inspector");
+            out = new FileOutputStream(inspectorPath);
             IOUtils.copy(in, out);
-            out.close();
         } catch (Exception e) {
             log.info("Error copying inspector file ", e);
+        } finally {
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
         }
+
         FilePath filePath = new FilePath(new File(inspectorPath));
         filePath.chmod(0777);
         if (StringUtils.isBlank(specFilePath)) {
@@ -118,7 +127,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
             x.close();
             StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
             for (int i = 0; i < args.length; i++) {
-                if (args[i] != null && !args[i].equals(""))
+                if (args[i] != null && !args[i].isEmpty())
                     execScript.append(" ").append(args[i]);
                 else execScript.append(" ''");
             }
