@@ -77,7 +77,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
                     .append(tempFile.getAbsolutePath())
                     .toString();
             for (int i = 0; i < args.length; i++) {
-                if (args[i] != null && !args[i].equals("")) execScript += " " + args[i];
+                if (args[i] != null && !args[i].isEmpty()) execScript += " " + args[i];
                 else execScript += " ''";
             }
             ProcessBuilder processBuilder = new ProcessBuilder(execScript);
@@ -172,26 +172,43 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         return "";
     }
 
-    private String readFile(Path filePath) {
+    private String readFile(Path filePath) throws IOException {
+        InputStream is = null;
+        InputStreamReader isr = null;
+        BufferedReader br = null;
+
         try {
-            InputStream is = java.nio.file.Files.newInputStream(filePath);
-            InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-            BufferedReader br = new BufferedReader(isr);
+            is = java.nio.file.Files.newInputStream(filePath);
+            isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+            br = new BufferedReader(isr);
             return br.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+            if (isr != null) {
+                isr.close();
+            }
+            if (br != null) {
+                br.close();
+            }
         }
         return "";
     }
 
-    private void writeToFile(File file, String data) {
+    private void writeToFile(File file, String data) throws IOException {
         FileWriter fw = null;
         try {
             fw = new FileWriter(file, true);
             fw.append(data);
-            fw.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (fw != null) {
+                fw.close();
+            }
         }
     }
 }
