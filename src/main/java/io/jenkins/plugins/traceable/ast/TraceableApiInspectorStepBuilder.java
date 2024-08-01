@@ -103,7 +103,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
 
     private String runScript(String scriptPath, String[] args, TaskListener listener, boolean printLogsToConsole) {
         try {
-            String returnOutput = "";
+            StringBuilder returnOutput = new StringBuilder();
             // Read the bundled script as string
             String bundledScript = CharStreams.toString(
                     new InputStreamReader(getClass().getResourceAsStream(scriptPath), StandardCharsets.UTF_8));
@@ -118,7 +118,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
             x.close();
             StringBuilder execScript = new StringBuilder("/bin/bash " + tempFile.getAbsolutePath());
             for (int i = 0; i < args.length; i++) {
-                if (args[i] != null && !args[i].equals(""))
+                if (args[i] != null && !args[i].isEmpty())
                     execScript.append(" ").append(args[i]);
                 else execScript.append(" ''");
             }
@@ -128,10 +128,11 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
                 logOutput(pb.getInputStream(), "", listener);
                 logOutput(pb.getErrorStream(), "Error: ", listener);
             } else {
-                Scanner scanner = new Scanner(pb.getInputStream(), "UTF-8");
+                Scanner scanner = new Scanner(pb.getInputStream(), StandardCharsets.UTF_8);
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    returnOutput += line + "\n";
+                    returnOutput.append(line);
+                    returnOutput.append("\n");
                 }
                 scanner.close();
             }
@@ -140,7 +141,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
             if (!deleted_temp) {
                 throw new FileNotFoundException("Temp script file not found");
             }
-            return returnOutput;
+            return returnOutput.toString();
 
         } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);

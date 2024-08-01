@@ -442,22 +442,23 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
             x.write(bundledScript);
             x.close();
-            String execScript = new StringBuffer()
-                    .append("/bin/bash ")
-                    .append(tempFile.getAbsolutePath())
-                    .toString();
+
+            StringBuilder execScriptBuffer = new StringBuilder();
+            execScriptBuffer.append("/bin/bash ");
+            execScriptBuffer.append(tempFile.getAbsolutePath());
+
             for (int i = 0; i < args.length; i++) {
                 if (!StringUtils.isEmpty(args[i])) args[i] = args[i].replace(" ", "");
-                if (args[i] != null && !args[i].equals(""))
-                    execScript = new StringBuffer()
-                            .append(execScript)
-                            .append(" ")
-                            .append(args[i])
-                            .toString();
-                else
-                    execScript =
-                            new StringBuffer().append(execScript).append(" ''").toString();
+                if (args[i] != null && !args[i].isEmpty()) {
+                    execScriptBuffer.append(" ");
+                    execScriptBuffer.append(args[i]);
+                } else {
+                    execScriptBuffer.append(execScriptBuffer);
+                    execScriptBuffer.append(" ''");
+                }
             }
+
+            String execScript = execScriptBuffer.toString();
             ProcessBuilder processBuilder = new ProcessBuilder(execScript);
             processBuilder.redirectErrorStream(true);
             Process pb = processBuilder.start();
