@@ -5,21 +5,25 @@ import com.google.common.io.CharStreams;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.io.*;
+import java.net.URL;
 import java.util.Scanner;
 import java.util.UUID;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -48,25 +52,15 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private static String traceableCliCertFileName;
     private static String traceableCliKeyFileName;
     private String workspacePathString;
-
     private String suiteName;
-
     private String includeEndpointLabels;
-
     private String includeEndpointIds;
-
     private String includeServiceIds;
-
     private String hookName;
-
     private Assets assets;
-
     private TrafficType trafficType;
-
     private Boolean includeAllEndPoints;
-
     private Boolean xastLive;
-
     private Boolean xastReplay;
 
     public Assets getAssets() {
@@ -368,11 +362,12 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         workspacePathString = workspace.getRemote();
-        scanEnded = false;
+        TraceableASTInitStepBuilder.setScanEnded(false);
         TraceableASTInitAndRunStepBuilder.setClientToken(null);
 
         if (cliSource.equals("download")) {
-            downloadTraceableCliBinary(listener);
+//            downloadTraceableCliBinary(listener);
+            workspace.act(new DownloadTraceableCliBinary(this.cliField));
         } else if (cliSource.equals("localpath")) {
             if (cliField == null || cliField.equals("")) {
                 throw new InterruptedException("Location of traceable cli binary not provided.");
@@ -382,6 +377,104 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         }
 
         initScan(listener, run);
+    }
+
+    // Download the binary at the workspace node if location is not given
+    private static final class DownloadTraceableCliBinary implements FileCallable<Void> {
+
+        private String workspacePath;
+        private String version;
+        private String osName;
+        private String arch;
+        private String filename;
+
+        DownloadTraceableCliBinary(String version) {
+            this.version = version;
+        }
+
+        @Override
+        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+            this.workspacePath = f.getAbsolutePath();
+            this.osName = getKernelName();
+            this.arch = getArchName();
+
+            URL url = new URL(getDownloadUrl());
+            String filepath = this.workspacePath + "/" + this.filename;
+
+            try (InputStream inp = url.openStream();
+                    BufferedInputStream bis = new BufferedInputStream(inp);
+                    FileOutputStream fops = new FileOutputStream(filepath)) {
+
+                byte[] d = new byte[1024];
+                int i;
+                while ((i = bis.read(d, 0, 1024)) != -1) {
+                    fops.write(d, 0, i);
+                }
+            }
+
+            unTar(filepath);
+        }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // We want this to be executable on all type of nodes
+            return;
+        }
+
+        private String getKernelName() throws IOException, InterruptedException {
+            String[] command = {"uname", "-s"};
+            ProcessBuilder pb = new ProcessBuilder(command);
+            Process p = pb.start();
+
+            // Catch the output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append(System.lineSeparator());
+            }
+
+            p.waitFor();
+
+            return output.toString();
+        }
+
+        private String getArchName() {
+            if (this.osName.equals("Darwin")) {
+                return "macosx-x86_64.tar.gz";
+            }
+
+            return "linux-x86_64.tar.gz";
+        }
+
+        private String getDownloadUrl() {
+            String url = "";
+            this.version = this.version.replace(" ", "");
+            if (this.version == null || this.version.isEmpty()) {
+                this.version = "''";
+            }
+
+            if (this.version.contains("-rc.")) {
+                url = "https://downloads.traceable.ai/cli/rc/" + version + "/traceable-cli-" + version + "-" + arch;
+                filename = "traceable-cli-" + version + "-" + arch;
+            } else if (this.version.equals("latest") || this.version.equals("''")) {
+                url = "https://downloads.traceable.ai/cli/release/latest/traceable-cli-latest-" + arch;
+                filename = "traceable-cli-latest-" + arch;
+            } else {
+                url = "https://downloads.traceable.ai/cli/release/" + version + "/traceable-cli-" + version + "-"
+                        + arch;
+                filename = "traceable-cli-" + version + "-" + arch;
+            }
+
+            return url;
+        }
+
+        private void unTar(String filepath) throws IOException, InterruptedException {
+            String[] command = {"tar", "-xvf", filepath, "-C", this.workspacePath};
+            ProcessBuilder pb = new ProcessBuilder(command);
+            Process p = pb.start();
+            p.waitFor();
+        }
     }
 
     // Download the binary if the location of the binary is not given.
@@ -426,6 +519,27 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             replay,
         };
         runScript(scriptPath, args, listener, "runAndInitScan");
+    }
+
+    private static final class InitScan implements FileCallable<Void> {
+
+        private String scriptPath;
+        private String[] args;
+
+        public InitScan(String scriptPath, String[] args) {
+            this.scriptPath = scriptPath;
+            this.args = args;
+        }
+
+        @Override
+        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+            return null;
+        }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+
+        }
     }
 
     private void runScript(String scriptPath, String[] args, TaskListener listener, String caller) {
