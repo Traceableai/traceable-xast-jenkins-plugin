@@ -18,7 +18,9 @@ import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.io.*;
 import java.net.URL;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
@@ -178,8 +180,8 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     @DataBoundConstructor
     public TraceableASTInitStepBuilder() {
         traceableCliBinaryLocation = null;
-        this.includeAllEndPoints = true;
-        this.xastLive = true;
+        this.includeAllEndPoints = (Boolean) true;
+        this.xastLive = (Boolean) true;
     }
 
     @DataBoundSetter
@@ -211,16 +213,16 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         this.trafficType = trafficType;
         switch (trafficType) {
             case XAST_LIVE:
-                this.xastLive = true;
-                this.xastReplay = false;
+                this.xastLive = (Boolean) true;
+                this.xastReplay = (Boolean) false;
                 break;
             case XAST_REPLAY:
-                this.xastLive = false;
-                this.xastReplay = true;
+                this.xastLive = (Boolean) false;
+                this.xastReplay = (Boolean) true;
                 break;
             default:
-                this.xastLive = false;
-                this.xastReplay = false;
+                this.xastLive = (Boolean) false;
+                this.xastReplay = (Boolean) false;
         }
     }
 
@@ -228,7 +230,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public void setAssets(Assets assets) {
         this.assets = assets;
         if (assets != Assets.AllEndpoints) {
-            this.includeAllEndPoints = false;
+            this.includeAllEndPoints = (Boolean) false;
         }
     }
 
@@ -362,12 +364,11 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         workspacePathString = workspace.getRemote();
-        TraceableASTInitStepBuilder.setScanEnded(false);
+        TraceableASTInitStepBuilder.setScanEnded(Boolean.FALSE);
         TraceableASTInitAndRunStepBuilder.setClientToken(null);
 
         if (cliSource.equals("download")) {
-//            downloadTraceableCliBinary(listener);
-            workspace.act(new DownloadTraceableCliBinary(this.cliField));
+            downloadTraceableCliBinary(workspace, listener);
         } else if (cliSource.equals("localpath")) {
             if (cliField == null || cliField.equals("")) {
                 throw new InterruptedException("Location of traceable cli binary not provided.");
@@ -376,7 +377,98 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             }
         }
 
-        initScan(listener, run);
+        initScan(run, workspace, listener);
+    }
+
+    // Download the binary if the location of the binary is not given.
+    private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener)
+            throws IOException, InterruptedException {
+        workspace.act(new DownloadTraceableCliBinary(this.cliField));
+        traceableCliBinaryLocation = workspace.getRemote() + "/traceable";
+    }
+
+    // Run the scan.
+    private void initScan(Run<?, ?> run, FilePath workspace, TaskListener listener)
+            throws IOException, InterruptedException {
+        String replay = String.valueOf(xastReplay != null && xastReplay);
+        String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
+
+        String scriptPath = "shell_scripts/init_ast_scan.sh";
+        String[] args = new String[] {
+            traceableCliBinaryLocation,
+            traceableRootCaFileName,
+            traceableCliCertFileName,
+            traceableCliKeyFileName,
+            scanName,
+            testEnvironment,
+            clientToken.getPlainText(),
+            attackPolicy,
+            pluginsToInclude,
+            includeUrlRegex,
+            excludeUrlRegex,
+            targetUrl,
+            traceableServer,
+            scanTimeout,
+            openApiSpecIds,
+            openApiSpecFiles,
+            postmanCollection,
+            postmanEnvironment,
+            suiteName,
+            includeServiceIds,
+            includeEndpointIds,
+            includeEndpointLabels,
+            hookName,
+            allEndPoint,
+            replay,
+        };
+
+        String tempFilePath = workspace.act(new CopyScript(scriptPath));
+        runScript(workspace, listener, tempFilePath, args);
+        deleteScript(workspace, listener, tempFilePath);
+    }
+
+    private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args) {
+
+        try {
+            List<String> command = new ArrayList<>();
+            Launcher nodeLaucher = workspace.createLauncher(listener);
+
+            command.add("/bin/bash");
+            command.add(scriptPath);
+
+            for (int i = 0; i < args.length; i++) {
+                if (!StringUtils.isEmpty(args[i])) {
+                    args[i] = args[i].replace(" ", "");
+                }
+
+                if (args[i] != null && !args[i].isEmpty()) command.add(args[i]);
+                else command.add("''");
+            }
+
+            nodeLaucher
+                    .launch()
+                    .cmds(command)
+                    .stdout(listener.getLogger())
+                    .stderr(listener.getLogger())
+                    .join();
+
+        } catch (Exception e) {
+            log.error("Exception in running {} script : {}", scriptPath, e);
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteScript(FilePath workspace, TaskListener listener, String scriptPath)
+            throws IOException, InterruptedException {
+        String[] command = {"rm", scriptPath};
+        Launcher nodeLaucher = workspace.createLauncher(listener);
+
+        nodeLaucher
+                .launch()
+                .cmds(command)
+                .stdout(listener.getLogger())
+                .stderr(listener.getLogger())
+                .join();
     }
 
     // Download the binary at the workspace node if location is not given
@@ -413,6 +505,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
             }
 
             unTar(filepath);
+            return null;
         }
 
         @Override
@@ -470,144 +563,49 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         }
 
         private void unTar(String filepath) throws IOException, InterruptedException {
-            String[] command = {"tar", "-xvf", filepath, "-C", this.workspacePath};
+            String[] command = {"tar", "-xvf", filepath, "--directory", this.workspacePath};
             ProcessBuilder pb = new ProcessBuilder(command);
             Process p = pb.start();
             p.waitFor();
         }
     }
 
-    // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) throws IOException, InterruptedException {
-        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[] {workspacePathString, cliField};
-        runScript(script_path, args, listener, "downloadTraceableCliBinary");
-        traceableCliBinaryLocation = workspacePathString + "/traceable";
-    }
-
-    // Run the scan.
-    private void initScan(TaskListener listener, Run<?, ?> run) {
-        String replay = String.valueOf(xastReplay != null && xastReplay);
-        String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
-
-        String scriptPath = "shell_scripts/init_ast_scan.sh";
-        String[] args = new String[] {
-            traceableCliBinaryLocation,
-            traceableRootCaFileName,
-            traceableCliCertFileName,
-            traceableCliKeyFileName,
-            scanName,
-            testEnvironment,
-            clientToken.getPlainText(),
-            attackPolicy,
-            pluginsToInclude,
-            includeUrlRegex,
-            excludeUrlRegex,
-            targetUrl,
-            traceableServer,
-            scanTimeout,
-            openApiSpecIds,
-            openApiSpecFiles,
-            postmanCollection,
-            postmanEnvironment,
-            suiteName,
-            includeServiceIds,
-            includeEndpointIds,
-            includeEndpointLabels,
-            hookName,
-            allEndPoint,
-            replay,
-        };
-        runScript(scriptPath, args, listener, "runAndInitScan");
-    }
-
-    private static final class InitScan implements FileCallable<Void> {
+    private static final class CopyScript implements FileCallable<String> {
 
         private String scriptPath;
-        private String[] args;
 
-        public InitScan(String scriptPath, String[] args) {
+        public CopyScript(String scriptPath) {
             this.scriptPath = scriptPath;
-            this.args = args;
         }
 
         @Override
-        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-            return null;
+        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+
+            String bundledScript = CharStreams.toString(new InputStreamReader(
+                    Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
+
+            File tempFile = File.createTempFile(
+                    "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
+                            + UUID.randomUUID().toString(),
+                    ".sh");
+
+            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
+            x.write(bundledScript);
+            x.close();
+
+            return tempFile.getAbsolutePath();
         }
 
         @Override
         public void checkRoles(RoleChecker checker) throws SecurityException {
-
+            return;
         }
-    }
-
-    private void runScript(String scriptPath, String[] args, TaskListener listener, String caller) {
-        try {
-            // Read the bundled script as string
-            String bundledScript = CharStreams.toString(
-                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
-            // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile(
-                    "script_" + scriptPath.replaceAll(".sh", "") + "_"
-                            + UUID.randomUUID().toString(),
-                    ".sh");
-            // Write the string to temp file
-            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
-            x.write(bundledScript);
-            x.close();
-            String execScript = new StringBuffer()
-                    .append("/bin/bash ")
-                    .append(tempFile.getAbsolutePath())
-                    .toString();
-            for (int i = 0; i < args.length; i++) {
-                if (!StringUtils.isEmpty(args[i])) args[i] = args[i].replace(" ", "");
-                if (args[i] != null && !args[i].equals(""))
-                    execScript = new StringBuffer()
-                            .append(execScript)
-                            .append(" ")
-                            .append(args[i])
-                            .toString();
-                else
-                    execScript =
-                            new StringBuffer().append(execScript).append(" ''").toString();
-            }
-            ProcessBuilder processBuilder = new ProcessBuilder(execScript);
-            processBuilder.redirectErrorStream(true);
-            Process pb = processBuilder.start();
-            if (!caller.equals("downloadTraceableCliBinary")) {
-                logOutput(pb.getErrorStream(), "Error: ", listener);
-            }
-            pb.waitFor();
-            boolean deleted_temp = tempFile.delete();
-            if (!deleted_temp) {
-                throw new FileNotFoundException("Temp script file not found");
-            }
-
-        } catch (Exception e) {
-            log.error("Exception in running {} script : {}", scriptPath, e);
-            e.printStackTrace();
-        }
-    }
-
-    private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
-        new Thread(() -> {
-                    Scanner scanner = new Scanner(inputStream, "UTF-8");
-                    while (scanner.hasNextLine()) {
-                        synchronized (this) {
-                            String line = scanner.nextLine();
-                            listener.getLogger().println(prefix + line);
-                        }
-                    }
-                    scanner.close();
-                })
-                .start();
     }
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private String STEP_NAME = "Traceable AST - Initialize";
+        private final String STEP_NAME = "Traceable AST - Initialize";
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
