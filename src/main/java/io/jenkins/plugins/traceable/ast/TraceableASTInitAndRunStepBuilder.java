@@ -426,7 +426,8 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
 
     // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
+    private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener)
+            throws IOException, InterruptedException {
         workspace.act(new DownloadTraceableCliBinary(this.cliField));
         traceableCliBinaryLocation = workspace.getRemote() + "/traceable";
     }
@@ -479,15 +480,16 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
     private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args, String caller) {
         try {
-                String tempFilePath = workspace.act(new CopyScript(scriptPath));
+            String tempFilePath = workspace.act(new CopyScript(scriptPath));
 
-                if (caller.equals("initAndRunScan")) {
-                    TraceableASTInitAndRunStepBuilder.scanId = workspace.act(new RunScript(listener, tempFilePath, args, caller));
-                } else if (caller.equals("abortScan")) {
-                    workspace.act(new RunScript(listener, tempFilePath, args, caller));
-                }
+            if (caller.equals("initAndRunScan")) {
+                TraceableASTInitAndRunStepBuilder.scanId =
+                        workspace.act(new RunScript(listener, tempFilePath, args, caller));
+            } else if (caller.equals("abortScan")) {
+                workspace.act(new RunScript(listener, tempFilePath, args, caller));
+            }
 
-                deleteScript(workspace, listener, tempFilePath);
+            deleteScript(workspace, listener, tempFilePath);
 
         } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);
@@ -495,16 +497,17 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         }
     }
 
-    private void deleteScript(FilePath workspace, TaskListener listener, String scriptPath) throws IOException, InterruptedException {
+    private void deleteScript(FilePath workspace, TaskListener listener, String scriptPath)
+            throws IOException, InterruptedException {
         String[] command = {"rm", scriptPath};
         Launcher nodeLauncher = workspace.createLauncher(listener);
 
         nodeLauncher
-            .launch()
-            .cmds(command)
-            .stdout(listener.getLogger())
-            .stderr(listener.getLogger())
-            .join();
+                .launch()
+                .cmds(command)
+                .stdout(listener.getLogger())
+                .stderr(listener.getLogger())
+                .join();
     }
 
     // Download the binary at the workspace node if the location is remote
@@ -531,8 +534,8 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             String filepath = this.workspacePath + "/" + this.filename;
 
             try (InputStream inp = url.openStream();
-                 BufferedInputStream bis = new BufferedInputStream(inp);
-                 FileOutputStream fops = new FileOutputStream(filepath)) {
+                    BufferedInputStream bis = new BufferedInputStream(inp);
+                    FileOutputStream fops = new FileOutputStream(filepath)) {
 
                 byte[] d = new byte[1024];
                 int i;
@@ -590,7 +593,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                 filename = "traceable-cli-latest-" + arch;
             } else {
                 url = "https://downloads.traceable.ai/cli/release/" + version + "/traceable-cli-" + version + "-"
-                    + arch;
+                        + arch;
                 filename = "traceable-cli-" + version + "-" + arch;
             }
 
@@ -617,12 +620,12 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
 
             String bundledScript = CharStreams.toString(new InputStreamReader(
-                Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
+                    Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
 
             File tempFile = File.createTempFile(
-                "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
-                    + UUID.randomUUID().toString(),
-                ".sh");
+                    "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
+                            + UUID.randomUUID().toString(),
+                    ".sh");
 
             BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
             x.write(bundledScript);
@@ -685,23 +688,24 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
         private void logOutput(InputStream inputStream, String prefix) {
             new Thread(() -> {
-                Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
-                while (scanner.hasNextLine()) {
-                    synchronized (this) {
-                        String line = scanner.nextLine();
-                        // Extract the scan ID from the cli output of scan init command.
-                        if (prefix.isEmpty() && line.contains("Running scan with ID")) {
-                            String[] tokens = line.split(" ");
-                            RunScript.scanId = tokens[tokens.length - 1].substring(0, 36);
-                        }
+                        Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
+                        while (scanner.hasNextLine()) {
+                            synchronized (this) {
+                                String line = scanner.nextLine();
+                                // Extract the scan ID from the cli output of scan init command.
+                                if (prefix.isEmpty() && line.contains("Running scan with ID")) {
+                                    String[] tokens = line.split(" ");
+                                    RunScript.scanId = tokens[tokens.length - 1].substring(0, 36);
+                                }
 
-                        if (!caller.equals("abortScan")) {
-                            listener.getLogger().println(prefix + line);
+                                if (!caller.equals("abortScan")) {
+                                    listener.getLogger().println(prefix + line);
+                                }
+                            }
                         }
-                    }
-                }
-                scanner.close();
-            }).start();
+                        scanner.close();
+                    })
+                    .start();
         }
     }
 
