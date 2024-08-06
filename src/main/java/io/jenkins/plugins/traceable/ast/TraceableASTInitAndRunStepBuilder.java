@@ -5,21 +5,26 @@ import com.google.common.io.CharStreams;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.io.*;
+import java.net.URL;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -393,7 +398,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         TraceableASTInitStepBuilder.setClientToken(null);
 
         if (cliSource.equals("download")) {
-            downloadTraceableCliBinary(listener);
+            downloadTraceableCliBinary(workspace, listener);
         } else if (cliSource.equals("localpath")) {
             if (cliField == null || cliField.equals("")) {
                 throw new InterruptedException("Location of traceable cli binary not provided.");
@@ -401,29 +406,30 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                 traceableCliBinaryLocation = cliField;
             }
         }
-        new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        runAndInitScan(listener, run);
-                        if (scanId != null) {
-                            abortScan(listener);
-                        }
-                        scanEnded = true;
-                    }
-                })
-                .start();
+
+//        new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        runAndInitScan(listener, run);
+//                        if (scanId != null) {
+//                            abortScan(listener);
+//                        }
+//                        scanEnded = true;
+//                    }
+//                })
+//                .start();
     }
 
+
+
     // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) {
-        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[] {workspacePathString, cliField};
-        runScript(script_path, args, listener, "downloadTraceableCliBinary");
-        traceableCliBinaryLocation = workspacePathString + "/traceable";
+    private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
+        workspace.act(new DownloadTraceableCliBinary(this.cliField));
+        traceableCliBinaryLocation = workspace.getRemote() + "/traceable";
     }
 
     // Run the scan.
-    private void runAndInitScan(TaskListener listener, Run<?, ?> run) {
+    private void runAndInitScan(Run<?, ?> run, FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
 
         String replay = String.valueOf(xastReplay != null && xastReplay);
         String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
@@ -457,6 +463,8 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             allEndPoint,
             replay
         };
+
+        String tempFilePath = workspace.act(new CopyScript(scriptPath));
         runScript(scriptPath, args, listener, "runAndInitScan");
     }
 
@@ -539,10 +547,186 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                 .start();
     }
 
+    // Download the binary at the workspace node if the location is remote
+    private static final class DownloadTraceableCliBinary implements FileCallable<Void> {
+
+        private String workspacePath;
+        private String version;
+        private String osName;
+        private String arch;
+        private String filename;
+
+        DownloadTraceableCliBinary(String version) {
+            this.version = version;
+        }
+
+        @Override
+        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+
+            this.workspacePath = f.getAbsolutePath();
+            this.osName = getKernelName();
+            this.arch = getArchName();
+
+            URL url = new URL(getDownloadUrl());
+            String filepath = this.workspacePath + "/" + this.filename;
+
+            try (InputStream inp = url.openStream();
+                 BufferedInputStream bis = new BufferedInputStream(inp);
+                 FileOutputStream fops = new FileOutputStream(filepath)) {
+
+                byte[] d = new byte[1024];
+                int i;
+                while ((i = bis.read(d, 0, 1024)) != -1) {
+                    fops.write(d, 0, i);
+                }
+            }
+
+            unTar(filepath);
+            return null;
+        }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            return;
+        }
+
+        private String getKernelName() throws IOException, InterruptedException {
+            String[] command = {"uname", "-s"};
+            ProcessBuilder pb = new ProcessBuilder(command);
+            Process p = pb.start();
+
+            // Catch the output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append(System.lineSeparator());
+            }
+
+            p.waitFor();
+            return output.toString();
+        }
+
+        private String getArchName() {
+            if (this.osName.equals("Darwin")) {
+                return "macosx-x86_64.tar.gz";
+            }
+
+            return "linux-x86_64.tar.gz";
+        }
+
+        private String getDownloadUrl() {
+            String url = "";
+            this.version = this.version.replace(" ", "");
+            if (this.version == null || this.version.isEmpty()) {
+                this.version = "''";
+            }
+
+            if (this.version.contains("-rc.")) {
+                url = "https://downloads.traceable.ai/cli/rc/" + version + "/traceable-cli-" + version + "-" + arch;
+                filename = "traceable-cli-" + version + "-" + arch;
+            } else if (this.version.equals("latest") || this.version.equals("''")) {
+                url = "https://downloads.traceable.ai/cli/release/latest/traceable-cli-latest-" + arch;
+                filename = "traceable-cli-latest-" + arch;
+            } else {
+                url = "https://downloads.traceable.ai/cli/release/" + version + "/traceable-cli-" + version + "-"
+                    + arch;
+                filename = "traceable-cli-" + version + "-" + arch;
+            }
+
+            return url;
+        }
+
+        private void unTar(String filepath) throws IOException, InterruptedException {
+            String[] command = {"tar", "-xvf", filepath, "--directory", this.workspacePath};
+            ProcessBuilder pb = new ProcessBuilder(command);
+            Process p = pb.start();
+            p.waitFor();
+        }
+    }
+
+    private static final class CopyScript implements FileCallable<String> {
+
+        private final String scriptPath;
+
+        public CopyScript(String scriptPath) {
+            this.scriptPath = scriptPath;
+        }
+
+        @Override
+        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+
+            String bundledScript = CharStreams.toString(new InputStreamReader(
+                Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
+
+            File tempFile = File.createTempFile(
+                "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
+                    + UUID.randomUUID().toString(),
+                ".sh");
+
+            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
+            x.write(bundledScript);
+            x.close();
+
+            return tempFile.getAbsolutePath();
+        }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            return;
+        }
+    }
+
+    private static final class RunScript implements FileCallable<Void> {
+
+        private final TaskListener listener;
+        private final String scriptPath;
+        private String[] args;
+
+        RunScript(TaskListener listener, String scriptPath, String[] args) {
+            this.listener = listener;
+            this.scriptPath = scriptPath;
+            this.args = args;
+        }
+
+        @Override
+        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+            return null;
+        }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+
+        }
+
+        private void logOutput(InputStream inputStream, String prefix, TaskListener listener, String caller) {
+            new Thread(() -> {
+                Scanner scanner = new Scanner(inputStream, "UTF-8");
+                while (scanner.hasNextLine()) {
+                    synchronized (this) {
+                        String line = scanner.nextLine();
+                        // Extract the scan ID from the cli output of scan init command.
+                        if (prefix.isEmpty() && line.contains("Running scan with ID")) {
+                            String[] tokens = line.split(" ");
+                            scanId = tokens[tokens.length - 1].substring(0, 36);
+                        }
+
+                        // Don't output the logs of abort scan.
+                        if (!caller.equals("abortScan")) {
+                            listener.getLogger().println(prefix + line);
+                        }
+                    }
+                }
+                scanner.close();
+            })
+                .start();
+        }
+    }
+
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private String STEP_NAME = "Traceable AST - Initialize and Run";
+        private final String STEP_NAME = "Traceable AST - Initialize and Run";
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
