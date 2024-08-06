@@ -423,8 +423,6 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                 .start();
     }
 
-
-
     // Download the binary if the location of the binary is not given.
     private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener)
             throws IOException, InterruptedException {
