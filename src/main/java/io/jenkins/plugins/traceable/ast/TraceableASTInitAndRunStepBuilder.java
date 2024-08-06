@@ -545,6 +545,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             }
 
             unTar(filepath);
+
             return null;
         }
 
