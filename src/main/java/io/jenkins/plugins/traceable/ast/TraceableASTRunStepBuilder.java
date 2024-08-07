@@ -1,30 +1,17 @@
 package io.jenkins.plugins.traceable.ast;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.UUID;
-
 import io.jenkins.plugins.traceable.ast.scan.utils.RunScript;
+import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -98,8 +85,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args, String caller) {
         try {
             if (caller.equals("runScan")) {
-                TraceableASTRunStepBuilder.setScanId(
-                        workspace.act(new RunScript(listener, scriptPath, args, caller)));
+                TraceableASTRunStepBuilder.setScanId(workspace.act(new RunScript(listener, scriptPath, args, caller)));
             } else if (caller.equals("abortScan")) {
                 workspace.act(new RunScript(listener, scriptPath, args, caller));
             }
