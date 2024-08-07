@@ -55,7 +55,6 @@ public class RunScript implements FileCallable<String> {
 
     private void copyScript() throws IOException {
 
-        listener.getLogger().println(this.scriptPath);
         String bundledScript = CharStreams.toString(new InputStreamReader(
                 Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
 
