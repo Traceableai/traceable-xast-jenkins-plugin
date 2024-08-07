@@ -2,7 +2,6 @@ package io.jenkins.plugins.traceable.ast;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -99,7 +98,8 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
             String tempFilePath = workspace.act(new CopyScript(scriptPath));
 
             if (caller.equals("runScan")) {
-                TraceableASTRunStepBuilder.setScanId(workspace.act(new RunScript(listener, tempFilePath, args, caller)));
+                TraceableASTRunStepBuilder.setScanId(
+                        workspace.act(new RunScript(listener, tempFilePath, args, caller)));
             } else if (caller.equals("abortScan")) {
                 workspace.act(new RunScript(listener, tempFilePath, args, caller));
             }
@@ -112,16 +112,16 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     }
 
     private void deleteScript(FilePath workspace, TaskListener listener, String scriptPath)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         String[] command = {"rm", scriptPath};
         Launcher nodeLauncher = workspace.createLauncher(listener);
 
         nodeLauncher
-            .launch()
-            .cmds(command)
-            .stdout(listener.getLogger())
-            .stderr(listener.getLogger())
-            .join();
+                .launch()
+                .cmds(command)
+                .stdout(listener.getLogger())
+                .stderr(listener.getLogger())
+                .join();
     }
 
     private static final class CopyScript implements FileCallable<String> {
@@ -136,12 +136,12 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
         public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
 
             String bundledScript = CharStreams.toString(new InputStreamReader(
-                Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
+                    Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
 
             File tempFile = File.createTempFile(
-                "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
-                    + UUID.randomUUID().toString(),
-                ".sh");
+                    "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
+                            + UUID.randomUUID().toString(),
+                    ".sh");
 
             BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
             x.write(bundledScript);
@@ -204,24 +204,24 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
 
         private void logOutput(InputStream inputStream, String prefix) {
             new Thread(() -> {
-                Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
-                while (scanner.hasNextLine()) {
-                    synchronized (this) {
-                        String line = scanner.nextLine();
-                        // Extract the scan ID from the cli output of scan init command.
-                        if (prefix.isEmpty() && line.contains("Running scan with ID")) {
-                            String[] tokens = line.split(" ");
-                            RunScript.scanId = tokens[tokens.length - 1].substring(0, 36);
-                        }
+                        Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
+                        while (scanner.hasNextLine()) {
+                            synchronized (this) {
+                                String line = scanner.nextLine();
+                                // Extract the scan ID from the cli output of scan init command.
+                                if (prefix.isEmpty() && line.contains("Running scan with ID")) {
+                                    String[] tokens = line.split(" ");
+                                    RunScript.scanId = tokens[tokens.length - 1].substring(0, 36);
+                                }
 
-                        if (!caller.equals("abortScan")) {
-                            listener.getLogger().println(prefix + line);
+                                if (!caller.equals("abortScan")) {
+                                    listener.getLogger().println(prefix + line);
+                                }
+                            }
                         }
-                    }
-                }
-                scanner.close();
-            })
-                .start();
+                        scanner.close();
+                    })
+                    .start();
         }
     }
 
