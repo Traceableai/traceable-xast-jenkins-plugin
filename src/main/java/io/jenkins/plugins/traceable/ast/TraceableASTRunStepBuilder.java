@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
+
+import io.jenkins.plugins.traceable.ast.scan.utils.RunScript;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.remoting.RoleChecker;
@@ -95,133 +97,14 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
 
     private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args, String caller) {
         try {
-            String tempFilePath = workspace.act(new CopyScript(scriptPath));
-
             if (caller.equals("runScan")) {
                 TraceableASTRunStepBuilder.setScanId(
-                        workspace.act(new RunScript(listener, tempFilePath, args, caller)));
+                        workspace.act(new RunScript(listener, scriptPath, args, caller)));
             } else if (caller.equals("abortScan")) {
-                workspace.act(new RunScript(listener, tempFilePath, args, caller));
+                workspace.act(new RunScript(listener, scriptPath, args, caller));
             }
-
-            deleteScript(workspace, listener, tempFilePath);
-
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    private void deleteScript(FilePath workspace, TaskListener listener, String scriptPath)
-            throws IOException, InterruptedException {
-        String[] command = {"rm", scriptPath};
-        Launcher nodeLauncher = workspace.createLauncher(listener);
-
-        nodeLauncher
-                .launch()
-                .cmds(command)
-                .stdout(listener.getLogger())
-                .stderr(listener.getLogger())
-                .join();
-    }
-
-    private static final class CopyScript implements FileCallable<String> {
-
-        private final String scriptPath;
-
-        public CopyScript(String scriptPath) {
-            this.scriptPath = scriptPath;
-        }
-
-        @Override
-        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-
-            String bundledScript = CharStreams.toString(new InputStreamReader(
-                    Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
-
-            File tempFile = File.createTempFile(
-                    "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
-                            + UUID.randomUUID().toString(),
-                    ".sh");
-
-            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
-            x.write(bundledScript);
-            x.close();
-
-            return tempFile.getAbsolutePath();
-        }
-
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            return;
-        }
-    }
-
-    private static final class RunScript implements FileCallable<String> {
-
-        private final TaskListener listener;
-        private final String scriptPath;
-        private static String scanId = null;
-        private String[] args;
-        private final String caller;
-
-        RunScript(TaskListener listener, String scriptPath, String[] args, String caller) {
-            this.listener = listener;
-            this.scriptPath = scriptPath;
-            this.args = args;
-            this.caller = caller;
-        }
-
-        @Override
-        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-
-            List<String> command = new ArrayList<>();
-            command.add("/bin/bash");
-            command.add(scriptPath);
-
-            for (int i = 0; i < args.length; i++) {
-                if (!StringUtils.isEmpty(args[i])) {
-                    args[i] = args[i].replace(" ", "");
-                }
-
-                if (args[i] != null && !args[i].isEmpty()) command.add(args[i]);
-                else command.add("''");
-            }
-
-            ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(true);
-            Process p = pb.start();
-            logOutput(p.getInputStream(), "");
-            logOutput(p.getErrorStream(), "Error: ");
-            p.waitFor();
-
-            return RunScript.scanId;
-        }
-
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            return;
-        }
-
-        private void logOutput(InputStream inputStream, String prefix) {
-            new Thread(() -> {
-                        Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
-                        while (scanner.hasNextLine()) {
-                            synchronized (this) {
-                                String line = scanner.nextLine();
-                                // Extract the scan ID from the cli output of scan init command.
-                                if (prefix.isEmpty() && line.contains("Running scan with ID")) {
-                                    String[] tokens = line.split(" ");
-                                    RunScript.scanId = tokens[tokens.length - 1].substring(0, 36);
-                                }
-
-                                if (!caller.equals("abortScan")) {
-                                    listener.getLogger().println(prefix + line);
-                                }
-                            }
-                        }
-                        scanner.close();
-                    })
-                    .start();
         }
     }
 
