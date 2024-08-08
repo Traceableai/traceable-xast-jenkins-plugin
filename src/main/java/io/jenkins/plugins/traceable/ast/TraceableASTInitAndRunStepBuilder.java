@@ -1,7 +1,5 @@
 package io.jenkins.plugins.traceable.ast;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -14,12 +12,11 @@ import hudson.tasks.Builder;
 import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
-import java.io.*;
-import java.util.Scanner;
-import java.util.UUID;
+import io.jenkins.plugins.traceable.ast.scan.utils.DownloadTraceableCliBinary;
+import io.jenkins.plugins.traceable.ast.scan.utils.RunScript;
+import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -393,7 +390,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
         TraceableASTInitStepBuilder.setClientToken(null);
 
         if (cliSource.equals("download")) {
-            downloadTraceableCliBinary(listener);
+            downloadTraceableCliBinary(workspace, listener);
         } else if (cliSource.equals("localpath")) {
             if (cliField == null || cliField.equals("")) {
                 throw new InterruptedException("Location of traceable cli binary not provided.");
@@ -401,12 +398,13 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
                 traceableCliBinaryLocation = cliField;
             }
         }
+
         new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        runAndInitScan(listener, run);
+                        runAndInitScan(run, workspace, listener);
                         if (scanId != null) {
-                            abortScan(listener);
+                            abortScan(workspace, listener);
                         }
                         scanEnded = true;
                     }
@@ -415,15 +413,14 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     // Download the binary if the location of the binary is not given.
-    private void downloadTraceableCliBinary(TaskListener listener) {
-        String script_path = "shell_scripts/download_traceable_cli_binary.sh";
-        String[] args = new String[] {workspacePathString, cliField};
-        runScript(script_path, args, listener, "downloadTraceableCliBinary");
-        traceableCliBinaryLocation = workspacePathString + "/traceable";
+    private void downloadTraceableCliBinary(FilePath workspace, TaskListener listener)
+            throws IOException, InterruptedException {
+        workspace.act(new DownloadTraceableCliBinary(this.cliField));
+        traceableCliBinaryLocation = workspace.getRemote() + "/traceable";
     }
 
     // Run the scan.
-    private void runAndInitScan(TaskListener listener, Run<?, ?> run) {
+    private void runAndInitScan(Run<?, ?> run, FilePath workspace, TaskListener listener) {
 
         String replay = String.valueOf(xastReplay != null && xastReplay);
         String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
@@ -457,92 +454,37 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
             allEndPoint,
             replay
         };
-        runScript(scriptPath, args, listener, "runAndInitScan");
+
+        runScript(workspace, listener, scriptPath, args, "initAndRunScan");
     }
 
     // Stop the scan with the given scan ID.
-    private void abortScan(TaskListener listener) {
+    private void abortScan(FilePath workspace, TaskListener listener) {
         String scriptPath = "shell_scripts/stop_ast_scan.sh";
         String[] args = new String[] {traceableCliBinaryLocation, scanId};
-        runScript(scriptPath, args, listener, "abortScan");
+        runScript(workspace, listener, scriptPath, args, "abortScan");
     }
 
-    private void runScript(String scriptPath, String[] args, TaskListener listener, String caller) {
+    private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args, String caller) {
         try {
-            // Read the bundled script as string
-            String bundledScript = CharStreams.toString(
-                    new InputStreamReader(getClass().getResourceAsStream(scriptPath), Charsets.UTF_8));
-            // Create a temp file with uuid appended to the name just to be safe
-            File tempFile = File.createTempFile(
-                    "script_" + scriptPath.replaceAll(".sh", "") + "_"
-                            + UUID.randomUUID().toString(),
-                    ".sh");
-            // Write the string to temp file
-            BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
-            x.write(bundledScript);
-            x.close();
-            String execScript = new StringBuffer()
-                    .append("/bin/bash ")
-                    .append(tempFile.getAbsolutePath())
-                    .toString();
-            for (int i = 0; i < args.length; i++) {
-                if (!StringUtils.isEmpty(args[i])) args[i] = args[i].replace(" ", "");
-                if (args[i] != null && !args[i].equals(""))
-                    execScript = new StringBuffer()
-                            .append(execScript)
-                            .append(" ")
-                            .append(args[i])
-                            .toString();
-                else
-                    execScript =
-                            new StringBuffer().append(execScript).append(" ''").toString();
-            }
-            ProcessBuilder processBuilder = new ProcessBuilder(execScript);
-            processBuilder.redirectErrorStream(true);
-            Process pb = processBuilder.start();
-            logOutput(pb.getInputStream(), "", listener, caller);
-            if (!caller.equals("downloadTraceableCliBinary")) {
-                logOutput(pb.getErrorStream(), "Error: ", listener, caller);
-            }
-            pb.waitFor();
-            boolean deleted_temp = tempFile.delete();
-            if (!deleted_temp) {
-                throw new FileNotFoundException("Temp script file not found");
+
+            if (caller.equals("initAndRunScan")) {
+                TraceableASTInitAndRunStepBuilder.scanId =
+                        workspace.act(new RunScript(listener, scriptPath, args, caller));
+            } else if (caller.equals("abortScan")) {
+                workspace.act(new RunScript(listener, scriptPath, args, caller));
             }
 
         } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);
-            e.printStackTrace();
+            e.printStackTrace(listener.getLogger());
         }
-    }
-
-    private void logOutput(InputStream inputStream, String prefix, TaskListener listener, String caller) {
-        new Thread(() -> {
-                    Scanner scanner = new Scanner(inputStream, "UTF-8");
-                    while (scanner.hasNextLine()) {
-                        synchronized (this) {
-                            String line = scanner.nextLine();
-                            // Extract the scan ID from the cli output of scan init command.
-                            if (prefix.equals("") && line.contains("Running scan with ID")) {
-                                String[] tokens = line.split(" ");
-                                scanId = tokens[tokens.length - 1].substring(0, 36);
-                            }
-
-                            // Don't output the logs of abort scan.
-                            if (!caller.equals("abortScan")) {
-                                listener.getLogger().println(prefix + line);
-                            }
-                        }
-                    }
-                    scanner.close();
-                })
-                .start();
     }
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private String STEP_NAME = "Traceable AST - Initialize and Run";
+        private final String STEP_NAME = "Traceable AST - Initialize and Run";
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
