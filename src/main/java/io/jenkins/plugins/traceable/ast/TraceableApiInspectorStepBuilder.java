@@ -1,8 +1,5 @@
 package io.jenkins.plugins.traceable.ast;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -12,22 +9,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
-import java.util.UUID;
-
 import io.jenkins.plugins.traceable.ast.scan.utils.ApiInspector;
+import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -94,41 +79,39 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         if (StringUtils.isBlank(specFilePath)) {
             findAndInspect(workspace, listener, repoWorkspacePath, scriptPath);
         } else {
-            String[] args = new String[]{
-                traceableServer, traceableToken, specFilePath
-            };
+            String[] args = new String[] {traceableServer, traceableToken, specFilePath};
             report.append(runScript(workspace, listener, scriptPath, args, true));
         }
 
         run.addAction(new TraceableApiInspectorReportAction(report.toString()));
     }
 
-    private void findAndInspect(FilePath workspace, TaskListener listener, String repoWorkspacePath, String scriptPath) {
+    private void findAndInspect(
+            FilePath workspace, TaskListener listener, String repoWorkspacePath, String scriptPath) {
         String findSpecScriptPath = "shell_scripts/spec_finder.sh";
         String[] workspaceArgs = {repoWorkspacePath};
 
         String specFilePaths = runScript(workspace, listener, findSpecScriptPath, workspaceArgs, false);
         String[] specFilePathsList = specFilePaths.split("\n");
 
-        if(specFilePathsList.length==0) {
+        if (specFilePathsList.length == 0) {
             listener.getLogger().println("No Open Api Spec Found at " + repoWorkspacePath);
         } else {
             listener.getLogger().println("Found open api specs at " + repoWorkspacePath + " : \n" + specFilePaths);
         }
 
         for (String specFile : specFilePathsList) {
-            String[] args = new String[]{
-                traceableServer, traceableToken, specFile
-            };
-            String newOpenApiSpecString = "========================================\nUploading open api spec : " + specFile + "\n";
+            String[] args = new String[] {traceableServer, traceableToken, specFile};
+            String newOpenApiSpecString =
+                    "========================================\nUploading open api spec : " + specFile + "\n";
             listener.getLogger().println(newOpenApiSpecString);
             report.append(newOpenApiSpecString);
             report.append(runScript(workspace, listener, scriptPath, args, true));
         }
-
     }
 
-    private String runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args,  boolean printLogsToConsole) {
+    private String runScript(
+            FilePath workspace, TaskListener listener, String scriptPath, String[] args, boolean printLogsToConsole) {
         try {
             return workspace.act(new ApiInspector(listener, scriptPath, args, printLogsToConsole));
         } catch (Exception e) {

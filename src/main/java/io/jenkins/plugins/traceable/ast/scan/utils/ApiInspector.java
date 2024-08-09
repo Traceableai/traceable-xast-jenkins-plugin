@@ -5,9 +5,6 @@ import com.google.common.io.CharStreams;
 import hudson.FilePath.FileCallable;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.remoting.RoleChecker;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
+import org.jenkinsci.remoting.RoleChecker;
 
 public class ApiInspector implements FileCallable<String> {
 
@@ -56,12 +54,12 @@ public class ApiInspector implements FileCallable<String> {
     private void copyScript() throws IOException {
 
         String bundledScript = CharStreams.toString(new InputStreamReader(
-            Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
+                Objects.requireNonNull(getClass().getResourceAsStream(this.scriptPath)), Charsets.UTF_8));
 
         File tempFile = File.createTempFile(
-            "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
-                + UUID.randomUUID().toString(),
-            ".sh");
+                "script_" + this.scriptPath.replaceAll(".sh", "") + "_"
+                        + UUID.randomUUID().toString(),
+                ".sh");
 
         BufferedWriter x = com.google.common.io.Files.newWriter(tempFile, Charsets.UTF_8);
         x.write(bundledScript);
@@ -106,15 +104,16 @@ public class ApiInspector implements FileCallable<String> {
 
     private void logOutput(InputStream is, String prefix) {
         new Thread(() -> {
-            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8);
-            while (scanner.hasNextLine()) {
-                synchronized (this) {
-                    String line = scanner.nextLine();
-                    returnOutput.append(line).append("\n");
-                    this.listener.getLogger().println(prefix + line);
-                }
-            }
-            scanner.close();
-        }).start();
+                    Scanner scanner = new Scanner(is, StandardCharsets.UTF_8);
+                    while (scanner.hasNextLine()) {
+                        synchronized (this) {
+                            String line = scanner.nextLine();
+                            returnOutput.append(line).append("\n");
+                            this.listener.getLogger().println(prefix + line);
+                        }
+                    }
+                    scanner.close();
+                })
+                .start();
     }
 }
