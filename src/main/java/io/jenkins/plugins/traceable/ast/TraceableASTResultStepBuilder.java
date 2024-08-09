@@ -48,7 +48,8 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     clientToken,
                     TraceableASTInitAndRunStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliCertFileName(),
-                    TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName()));
+                    TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName(),
+                    workspace));
         } else if (TraceableASTInitStepBuilder.getClientToken() != null) {
             while (TraceableASTInitStepBuilder.getScanEnded() == null || !TraceableASTInitStepBuilder.getScanEnded()) {}
             if (TraceableASTRunStepBuilder.getScanId() == null) {
@@ -60,14 +61,15 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     clientToken,
                     TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
-                    TraceableASTInitStepBuilder.getTraceableCliKeyFileName()));
+                    TraceableASTInitStepBuilder.getTraceableCliKeyFileName(),
+                    workspace));
         }
     }
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private String STEP_NAME = "Traceable AST - Generate Scan Result";
+        private final String STEP_NAME = "Traceable AST - Generate Scan Result";
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {

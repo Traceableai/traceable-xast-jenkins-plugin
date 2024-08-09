@@ -15,6 +15,7 @@ import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.helper.Assets;
 import io.jenkins.plugins.traceable.ast.scan.helper.TrafficType;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.UUID;
 import jenkins.tasks.SimpleBuildStep;
@@ -478,7 +479,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
 
     private void logOutput(InputStream inputStream, String prefix, TaskListener listener) {
         new Thread(() -> {
-                    Scanner scanner = new Scanner(inputStream, "UTF-8");
+                    Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8);
                     while (scanner.hasNextLine()) {
                         synchronized (this) {
                             String line = scanner.nextLine();
