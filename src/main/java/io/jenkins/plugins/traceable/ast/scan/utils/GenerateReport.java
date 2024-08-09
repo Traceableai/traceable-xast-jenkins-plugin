@@ -104,18 +104,14 @@ public class GenerateReport implements FileCallable<String[]> {
     }
 
     private void logOutput(InputStream inputStream) throws IOException {
-        new Thread(() -> {
-                    Scanner scanner = new Scanner(inputStream, Charsets.UTF_8);
-                    while (scanner.hasNextLine()) {
-                        synchronized (this) {
-                            String line = scanner.nextLine();
-                            report.append(line).append("\n");
-                            System.out.println(line);
-                        }
-                    }
-                    scanner.close();
-                })
-                .start();
+
+        Scanner scanner = new Scanner(inputStream, Charsets.UTF_8);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            report.append(line).append("\n");
+            System.out.println(line);
+        }
+        scanner.close();
     }
 
     private String createHtmlReport(String reportText) {
