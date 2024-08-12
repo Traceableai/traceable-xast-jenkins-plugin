@@ -44,7 +44,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     private static String traceableRootCaFileName;
     private static String traceableCliCertFileName;
     private static String traceableCliKeyFileName;
-    private String workspacePathString;
     private String suiteName;
     private String includeEndpointLabels;
     private String includeEndpointIds;
@@ -204,16 +203,16 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         this.trafficType = trafficType;
         switch (trafficType) {
             case XAST_LIVE:
-                this.xastLive = (Boolean) true;
-                this.xastReplay = (Boolean) false;
+                this.xastLive = true;
+                this.xastReplay = false;
                 break;
             case XAST_REPLAY:
-                this.xastLive = (Boolean) false;
-                this.xastReplay = (Boolean) true;
+                this.xastLive = false;
+                this.xastReplay = true;
                 break;
             default:
-                this.xastLive = (Boolean) false;
-                this.xastReplay = (Boolean) false;
+                this.xastLive = false;
+                this.xastReplay = false;
         }
     }
 
@@ -221,7 +220,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     public void setAssets(Assets assets) {
         this.assets = assets;
         if (assets != Assets.AllEndpoints) {
-            this.includeAllEndPoints = (Boolean) false;
+            this.includeAllEndPoints = false;
         }
     }
 
@@ -360,7 +359,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
         if (cliSource.equals("download")) {
             downloadTraceableCliBinary(workspace, listener);
         } else if (cliSource.equals("localpath")) {
-            if (cliField == null || cliField.equals("")) {
+            if (cliField == null || cliField.isEmpty()) {
                 throw new InterruptedException("Location of traceable cli binary not provided.");
             } else {
                 traceableCliBinaryLocation = cliField;
