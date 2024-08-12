@@ -354,7 +354,6 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        workspacePathString = workspace.getRemote();
         TraceableASTInitStepBuilder.setScanEnded(Boolean.FALSE);
         TraceableASTInitAndRunStepBuilder.setClientToken(null);
 
