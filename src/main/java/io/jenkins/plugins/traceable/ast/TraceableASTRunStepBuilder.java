@@ -84,10 +84,11 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
 
     private void runScript(FilePath workspace, TaskListener listener, String scriptPath, String[] args, String caller) {
         try {
+
+            String returnValue = workspace.act(new RunScript(listener, scriptPath, args, caller));
+
             if (caller.equals("runScan")) {
-                TraceableASTRunStepBuilder.setScanId(workspace.act(new RunScript(listener, scriptPath, args, caller)));
-            } else if (caller.equals("abortScan")) {
-                workspace.act(new RunScript(listener, scriptPath, args, caller));
+                TraceableASTRunStepBuilder.setScanId(returnValue);
             }
         } catch (Exception e) {
             e.printStackTrace();
