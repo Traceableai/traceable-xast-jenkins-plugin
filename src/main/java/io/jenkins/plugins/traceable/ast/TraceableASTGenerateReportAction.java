@@ -3,6 +3,7 @@ package io.jenkins.plugins.traceable.ast;
 import hudson.FilePath;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.utils.GenerateReport;
 import jenkins.model.RunAction2;
@@ -20,6 +21,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private String traceableCliCertFileName;
     private String traceableCliKeyFileName;
     private final FilePath workspace;
+    private final TaskListener listener;
 
     public TraceableASTGenerateReportAction(
             String traceableCliBinaryLocation,
@@ -28,7 +30,8 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
             String traceableRootCaFileName,
             String traceableCliCertFileName,
             String traceableCliKeyFileName,
-            FilePath workspace) {
+            FilePath workspace,
+            TaskListener listener) {
         this.traceableCliBinaryLocation = traceableCliBinaryLocation;
         this.scanId = scanId;
         this.clientToken = clientToken;
@@ -36,6 +39,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         this.traceableCliCertFileName = traceableCliCertFileName;
         this.traceableCliKeyFileName = traceableCliKeyFileName;
         this.workspace = workspace;
+        this.listener = listener;
     }
 
     @Override
@@ -58,11 +62,16 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
         try {
             String[] status = this.workspace.act(new GenerateReport(scriptPath, args, run.getId()));
 
-            if (status[0].equals("FAILURE")) {
+            if (status.length > 0 && status[0] != null && status[0].equals("FAILURE")) {
                 run.setResult(Result.FAILURE);
             }
 
-            this.htmlReport = status[1];
+            if (status.length > 1 && status[1] != null) {
+                this.htmlReport = status[1];
+            } else {
+                listener.getLogger().println("No Output for the scan");
+            }
+
         } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);
             e.printStackTrace();

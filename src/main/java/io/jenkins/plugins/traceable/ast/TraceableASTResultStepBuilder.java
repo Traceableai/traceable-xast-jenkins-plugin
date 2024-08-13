@@ -49,7 +49,8 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     TraceableASTInitAndRunStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliCertFileName(),
                     TraceableASTInitAndRunStepBuilder.getTraceableCliKeyFileName(),
-                    workspace));
+                    workspace,
+                    listener));
         } else if (TraceableASTInitStepBuilder.getClientToken() != null) {
             while (TraceableASTInitStepBuilder.getScanEnded() == null || !TraceableASTInitStepBuilder.getScanEnded()) {}
             if (TraceableASTRunStepBuilder.getScanId() == null) {
@@ -62,7 +63,8 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
                     TraceableASTInitStepBuilder.getTraceableRootCaFileName(),
                     TraceableASTInitStepBuilder.getTraceableCliCertFileName(),
                     TraceableASTInitStepBuilder.getTraceableCliKeyFileName(),
-                    workspace));
+                    workspace,
+                    listener));
         }
     }
 
