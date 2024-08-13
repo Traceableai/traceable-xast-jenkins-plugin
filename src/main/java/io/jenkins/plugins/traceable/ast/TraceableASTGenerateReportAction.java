@@ -5,7 +5,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.utils.GenerateReport;
-import java.io.*;
 import jenkins.model.RunAction2;
 import lombok.extern.slf4j.Slf4j;
 
