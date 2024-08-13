@@ -28,5 +28,5 @@ traceableCliBinaryLocation=$1
 #fi
 
 #Running command to generate the output of the scan with the specific scan-id
-showcmd="$traceableCliBinaryLocation ast scan report --id $2 --token $3 --wait --exit-code"
-showcmd
+showcmd="$traceableCliBinaryLocation ast scan report --id $2 --token $3 --output-format text --wait --exit-code"
+eval "$showcmd"
