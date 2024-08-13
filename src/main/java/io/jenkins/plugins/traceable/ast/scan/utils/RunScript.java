@@ -43,7 +43,6 @@ public class RunScript implements FileCallable<String> {
         copyScript();
         runScript();
         deleteScript();
-
         return RunScript.scanId;
     }
 

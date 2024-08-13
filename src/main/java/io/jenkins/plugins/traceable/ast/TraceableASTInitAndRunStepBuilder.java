@@ -477,7 +477,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
 
         } catch (Exception e) {
             log.error("Exception in running {} script : {}", scriptPath, e);
-            e.printStackTrace(listener.getLogger());
+            e.printStackTrace();
         }
     }
 
