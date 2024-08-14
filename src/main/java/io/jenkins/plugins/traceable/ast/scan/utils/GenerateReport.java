@@ -2,7 +2,6 @@ package io.jenkins.plugins.traceable.ast.scan.utils;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,9 +16,9 @@ import java.util.Scanner;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jenkinsci.remoting.RoleChecker;
+import jenkins.MasterToSlaveFileCallable;
 
-public class GenerateReport implements FileCallable<String[]> {
+public class GenerateReport extends MasterToSlaveFileCallable<String[]> {
 
     private final String scriptPath;
     private String[] args;
@@ -45,11 +44,6 @@ public class GenerateReport implements FileCallable<String[]> {
 
         String[] ret = {this.processExitValue, this.htmlReport};
         return ret;
-    }
-
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-        return;
     }
 
     private void copyScript() throws IOException {

@@ -1,6 +1,5 @@
 package io.jenkins.plugins.traceable.ast.scan.utils;
 
-import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -10,9 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import org.jenkinsci.remoting.RoleChecker;
+import jenkins.MasterToSlaveFileCallable;
 
-public class DownloadTraceableCliBinary implements FileCallable<Void> {
+public class DownloadTraceableCliBinary extends MasterToSlaveFileCallable<Void> {
 
     private String workspacePath;
     private String version;
@@ -48,12 +47,6 @@ public class DownloadTraceableCliBinary implements FileCallable<Void> {
         unTar(filepath);
 
         return null;
-    }
-
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-        // We want this to be able to run on any type of machine (controller or agent)
-        return;
     }
 
     private String getKernelName() throws IOException, InterruptedException {

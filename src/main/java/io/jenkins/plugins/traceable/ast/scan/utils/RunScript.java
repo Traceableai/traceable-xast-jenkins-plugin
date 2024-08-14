@@ -2,7 +2,6 @@ package io.jenkins.plugins.traceable.ast.scan.utils;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import hudson.FilePath.FileCallable;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.BufferedWriter;
@@ -17,10 +16,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
+import jenkins.MasterToSlaveFileCallable;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.remoting.RoleChecker;
 
-public class RunScript implements FileCallable<String> {
+public class RunScript extends MasterToSlaveFileCallable<String> {
 
     private final TaskListener listener;
     private final String scriptPath;
@@ -44,12 +43,6 @@ public class RunScript implements FileCallable<String> {
         runScript();
         deleteScript();
         return RunScript.scanId;
-    }
-
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-        // We want this to be able to run on any type of machine (controller or agent)
-        return;
     }
 
     private void copyScript() throws IOException {
