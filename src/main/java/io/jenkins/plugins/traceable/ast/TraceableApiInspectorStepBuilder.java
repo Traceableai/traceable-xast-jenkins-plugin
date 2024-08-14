@@ -9,6 +9,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.Secret;
 import io.jenkins.plugins.traceable.ast.scan.utils.ApiInspector;
 import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
@@ -23,7 +24,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
     private String repoPath;
     private String specFilePath;
     private String traceableServer;
-    private String traceableToken;
+    private static Secret traceableToken;
     private StringBuilder report;
 
     public String getRepoPath() {
@@ -38,7 +39,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         return traceableServer;
     }
 
-    public String getTraceableToken() {
+    public static Secret getTraceableToken() {
         return traceableToken;
     }
 
@@ -58,8 +59,8 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
     }
 
     @DataBoundSetter
-    public void setTraceableToken(String traceableToken) {
-        this.traceableToken = traceableToken;
+    public static void setTraceableToken(Secret traceableToken) {
+        TraceableApiInspectorStepBuilder.traceableToken = traceableToken;
     }
 
     @DataBoundConstructor
@@ -79,7 +80,8 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         if (StringUtils.isBlank(specFilePath)) {
             findAndInspect(workspace, listener, repoWorkspacePath, scriptPath);
         } else {
-            String[] args = new String[] {traceableServer, traceableToken, specFilePath};
+            String absoluteSpecFilePath = repoWorkspacePath + "/" + specFilePath;
+            String[] args = new String[] {traceableServer, traceableToken.getPlainText(), absoluteSpecFilePath};
             report.append(runScript(workspace, listener, scriptPath, args, true));
         }
 
@@ -101,7 +103,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
         }
 
         for (String specFile : specFilePathsList) {
-            String[] args = new String[] {traceableServer, traceableToken, specFile};
+            String[] args = new String[] {traceableServer, traceableToken.getPlainText(), specFile};
             String newOpenApiSpecString =
                     "========================================\nUploading open api spec : " + specFile + "\n";
             listener.getLogger().println(newOpenApiSpecString);

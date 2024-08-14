@@ -19,6 +19,7 @@ public class TraceableASTGenerateReportAction implements RunAction2 {
     private Secret clientToken;
     private String traceableRootCaFileName;
     private String traceableCliCertFileName;
+    // lgtm[jenkins/plaintext-storage]
     private String traceableCliKeyFileName;
     private final FilePath workspace;
     private final TaskListener listener;

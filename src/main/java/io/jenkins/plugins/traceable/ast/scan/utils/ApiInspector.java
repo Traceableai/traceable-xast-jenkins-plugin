@@ -2,7 +2,6 @@ package io.jenkins.plugins.traceable.ast.scan.utils;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import hudson.FilePath.FileCallable;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.BufferedWriter;
@@ -17,9 +16,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
-import org.jenkinsci.remoting.RoleChecker;
+import jenkins.MasterToSlaveFileCallable;
 
-public class ApiInspector implements FileCallable<String> {
+public class ApiInspector extends MasterToSlaveFileCallable<String> {
 
     private final TaskListener listener;
     private final String scriptPath;
@@ -44,11 +43,6 @@ public class ApiInspector implements FileCallable<String> {
         deleteScript();
 
         return returnOutput.toString();
-    }
-
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-        return;
     }
 
     private void copyScript() throws IOException {
