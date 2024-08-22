@@ -12,6 +12,7 @@ import hudson.tasks.Builder;
 import io.jenkins.plugins.traceable.ast.scan.utils.RunScript;
 import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -96,6 +97,7 @@ public class TraceableASTRunStepBuilder extends Builder implements SimpleBuildSt
     }
 
     @Extension
+    @Symbol("scanRun")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private final String STEP_NAME = "Traceable AST - Run";

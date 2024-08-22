@@ -1,5 +1,6 @@
 # Traceable API Security Testing Plugin
-<img>![img.png](img.png)</img>
+<img src="docs/images/img.png"/>
+
 # Introduction
 <p align="justify">
 In the world full of microservices, there are cosmic number of APIs that a single organization exposes for internal and external use. But with the advantage of APIs making microservices architecture possible, there also comes the downside of data abuse, exposure and security. More the APIs exposed, an organization becomes more and more vulnerable to API attacks such as the <a href="https://owasp.org/www-project-top-ten/">OWASPs Top 10</a>. To solve this problem <a href="www.traceable.ai">TRACEABLE AI</a> helps you by continuously securing your APIs, bringing you deep visibility, real-time protection, and threat analytics. Traceable AI combines distributed tracing and advanced context-based behavioral analytics to deliver modern API security to your cloud-native and API-based applications.
@@ -37,7 +38,7 @@ To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and l
 <li>In the dialog "Generate new Token" and remember/note the scan token you generate.</li>
 </ol>
 
-<img src="src/main/webapp/img/Readme_get_token.png"/>
+<img src="docs/images/Readme_get_token.png"/>
 
 ### 3. Add Build Step
 
@@ -45,7 +46,7 @@ To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and l
 <ol>
     <li>To add AST scan job, create a new item in jenkins as a Freestyle project.</li>
     <li>Add Traceable AST as the build step for the job.</li>
-    <img src="src/main/webapp/img/Readme_add_build.png"/>
+    <img src="docs/images/Readme_add_build.png"/>
     <li>Fill the configuration fields for the job.</li>
     <li>Click on Advanced button to fill additional configuration fields.</li>
     <li>Apply and Save.</li>
@@ -53,7 +54,7 @@ To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and l
 </ol>
 Client Token and Traffic environment are required fields and Client Token is the same as the scan token we generated.
 <p></p>
-<img src="src/main/webapp/img/Readme_add_configuration.png"/>
+<img src="docs/images/Readme_add_configuration.png"/>
 
 ### 4. View Traceable AST Report
 
@@ -64,7 +65,7 @@ Client Token and Traffic environment are required fields and Client Token is the
 </ol>
 The scan report shows the number of vulnerabilities found for each type of plugin category.
 <p></p>
-<img src="src/main/webapp/img/Readme_report.png"/>
+<img src="docs/images/Readme_report.png"/>
 
 <h6>List of Available Configuration Options:</h6>
 
