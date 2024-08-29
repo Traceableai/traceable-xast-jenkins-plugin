@@ -425,7 +425,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     }
 
     @Extension
-    @Symbol("scanInit")
+    @Symbol("traceableScanInit")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private final String STEP_NAME = "Traceable AST - Initialize";

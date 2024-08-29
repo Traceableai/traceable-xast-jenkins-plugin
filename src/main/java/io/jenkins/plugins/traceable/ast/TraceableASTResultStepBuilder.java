@@ -70,7 +70,7 @@ public class TraceableASTResultStepBuilder extends Builder implements SimpleBuil
     }
 
     @Extension
-    @Symbol("scanResult")
+    @Symbol("traceableScanResult")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private final String STEP_NAME = "Traceable AST - Generate Scan Result";
