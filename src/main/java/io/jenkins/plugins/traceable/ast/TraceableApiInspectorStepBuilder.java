@@ -125,7 +125,7 @@ public class TraceableApiInspectorStepBuilder extends Builder implements SimpleB
     }
 
     @Extension
-    @Symbol("apiInspectorRun")
+    @Symbol("traceableApiInspectorRun")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private final String STEP_NAME = "Traceable API Inspector";

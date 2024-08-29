@@ -483,7 +483,7 @@ public class TraceableASTInitAndRunStepBuilder extends Builder implements Simple
     }
 
     @Extension
-    @Symbol("scanInitAndRun")
+    @Symbol("traceableScanInitAndRun")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private final String STEP_NAME = "Traceable AST - Initialize and Run";
