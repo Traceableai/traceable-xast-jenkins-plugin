@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    TRACEABLE
+    Traceable AI jenkins plugin to run DAST scans to find vulnerabilities in your APIs and run API inspector to validate the open api specs.
 </div>
