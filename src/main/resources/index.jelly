@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    TRACEABLE
+    Traceable Jenkins Plugin that allows to configure and run AST scans.
 </div>
