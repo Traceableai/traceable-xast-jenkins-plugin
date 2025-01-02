@@ -69,15 +69,15 @@ public class RunScript extends MasterToSlaveFileCallable<String> {
         command.add("/bin/bash");
         command.add(this.tempFile.getAbsolutePath());
 
-        for (int i = 0; i < args.length; i++) {
-            if (StringUtils.isNotEmpty(args[i])) {
-                if (i == 0) {
-                    args[i] = "'" + args[i] + "'";
+        for (int argIndex = 0; argIndex < args.length; argIndex++) {
+            if (StringUtils.isNotBlank(args[argIndex])) {
+                if (argIndex == 0) {
+                    args[argIndex] = "'" + args[argIndex] + "'";
                 } else {
-                    args[i] = args[i].replace(" ", "");
+                    args[argIndex] = args[argIndex].replace(" ", "");
                 }
 
-                command.add(args[i]);
+                command.add(args[argIndex]);
             } else {
                 command.add("''");
             }
