@@ -21,12 +21,6 @@
       <url>https://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
-  <developers>
-    <developer>
-      <id>dhruv-singhal-github</id>
-      <name>Dhruv Singhal</name>
-    </developer>
-  </developers>
 
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
@@ -42,6 +36,7 @@
     <jenkins.version>2.440.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <tagNameFormat>v@{project.version}</tagNameFormat>
+    <spotless.check.skip>false</spotless.check.skip>
   </properties>
 
   <dependencyManagement>
@@ -110,21 +105,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.43.0</version>
-        <executions>
-          <execution>
-            <id>format</id>
-            <goals>
-              <goal>check</goal>
-              <goal>apply</goal>
-            </goals>
-            <phase>process-sources</phase>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>

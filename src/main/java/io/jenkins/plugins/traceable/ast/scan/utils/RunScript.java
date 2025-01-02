@@ -17,8 +17,10 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
 import jenkins.MasterToSlaveFileCallable;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
+@Slf4j
 public class RunScript extends MasterToSlaveFileCallable<String> {
 
     private final TaskListener listener;
@@ -67,13 +69,18 @@ public class RunScript extends MasterToSlaveFileCallable<String> {
         command.add("/bin/bash");
         command.add(this.tempFile.getAbsolutePath());
 
-        for (int i = 0; i < args.length; i++) {
-            if (!StringUtils.isEmpty(args[i])) {
-                args[i] = args[i].replace(" ", "");
-            }
+        for (int argIndex = 0; argIndex < args.length; argIndex++) {
+            if (StringUtils.isNotBlank(args[argIndex])) {
+                if (argIndex == 0) {
+                    args[argIndex] = "'" + args[argIndex] + "'";
+                } else {
+                    args[argIndex] = args[argIndex].replace(" ", "");
+                }
 
-            if (args[i] != null && !args[i].isEmpty()) command.add(args[i]);
-            else command.add("''");
+                command.add(args[argIndex]);
+            } else {
+                command.add("''");
+            }
         }
 
         ProcessBuilder pb = new ProcessBuilder(command);

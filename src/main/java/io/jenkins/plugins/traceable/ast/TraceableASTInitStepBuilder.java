@@ -378,8 +378,7 @@ public class TraceableASTInitStepBuilder extends Builder implements SimpleBuildS
     }
 
     // Initialize the scan.
-    private void initScan(Run<?, ?> run, FilePath workspace, TaskListener listener)
-            throws IOException, InterruptedException {
+    private void initScan(Run<?, ?> run, FilePath workspace, TaskListener listener) {
         String replay = String.valueOf(xastReplay != null && xastReplay);
         String allEndPoint = String.valueOf(includeAllEndPoints != null && includeAllEndPoints);
 
