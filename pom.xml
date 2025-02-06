@@ -9,7 +9,7 @@
   </parent>
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>traceable</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>1.0.0</version>
   <packaging>hpi</packaging>
   <name>traceable-plugin</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
