@@ -3,8 +3,10 @@
 
 # Introduction
 <p align="justify">
-In the world full of microservices, there are cosmic number of APIs that a single organization exposes for internal and external use. But with the advantage of APIs making microservices architecture possible, there also comes the downside of data abuse, exposure and security. More the APIs exposed, an organization becomes more and more vulnerable to API attacks such as the <a href="https://owasp.org/www-project-top-ten/">OWASPs Top 10</a>. To solve this problem <a href="www.traceable.ai">TRACEABLE AI</a> helps you by continuously securing your APIs, bringing you deep visibility, real-time protection, and threat analytics. Traceable AI combines distributed tracing and advanced context-based behavioral analytics to deliver modern API security to your cloud-native and API-based applications.
+In the world full of microservices, there are cosmic number of APIs that a single organization exposes for internal and external use. But with the advantage of APIs making microservices architecture possible, there also comes the downside of data abuse, exposure and security. More the APIs exposed, an organization becomes more and more vulnerable to API attacks such as the <a href="https://owasp.org/www-project-top-ten/">OWASPs Top 10</a>. To solve this problem <a href="www.traceable.ai">Traceable AI</a> helps you by continuously securing your APIs, bringing you deep visibility, real-time protection, and threat analytics. Traceable AI combines distributed tracing and advanced context-based behavioral analytics to deliver modern API security to your cloud-native and API-based applications.
 </p>
+
+> **Supported Platforms:** This plugin currently supports only macOS and Linux environments.
 
 ## What is AST?
 <p align="justify">
@@ -29,34 +31,39 @@ This Jenkins plugin for AST allows to run AST scan as a job on local jenkins ins
 <li>Install the plugin.</li>
 </ol>
 
-### 2. Get Scan Token
+### 2. Generate API Token
 
-To get your scan token go to [app.traceable.ai](https://app.traceable.ai/) and login.
+To get your API token go to [app.traceable.ai](https://app.traceable.ai/) and login to the Traceable dashboard.
 <ol>
-<li>Go to the API testing tab.</li>
-<li>Press the generate scan button, a dialog appears.</li>
-<li>In the dialog "Generate new Token" and remember/note the scan token you generate.</li>
+<li>Go to the <strong>Testing</strong> tab.</li>
+<li>Select the Suite you want to run the scan for.</li>
+<li>Click on the <strong>Start Scan</strong> button on the top right corner.</li>
+<img src="docs/images/AST_Scan_Suite.png"/>
+<li>In the <strong>Start New Scan</strong> window, click on <strong>Generate New Token</strong> button to generate a new API token.</li>
+<img src="docs/images/Generate_New_Token.png"/>
 </ol>
 
-<img src="docs/images/Readme_get_token.png"/>
+For more detailed instructions to configure a scan and generate API tokens, see [API Token Generation Guide](https://docs.traceable.ai/docs/suites#creating-a-suite-or-quick-scan).
 
 ### 3. Add Build Step
 
 
 <ol>
-    <li>To add AST scan job, create a new item in jenkins as a Freestyle project.</li>
-    <li>Add Traceable AST as the build step for the job.</li>
-    <img src="docs/images/Readme_add_build.png"/>
+    <li>To add an AST scan job, create a new item in Jenkins as a Freestyle project.</li>
+    <li>Add one of the <strong>Traceable AST</strong> build steps.</li>
+    <img src="docs/images/AST_build_steps.png"/>
     <li>Fill the configuration fields for the job.</li>
     <li>Click on Advanced button to fill additional configuration fields.</li>
     <li>Apply and Save.</li>
-    
 </ol>
-Client Token and Traffic environment are required fields and Client Token is the same as the scan token we generated.
-<p></p>
-<img src="docs/images/Readme_add_configuration.png"/>
+
+> **Important:** API Token is a required field. API Token is the same generated in [Generate API Token](#2-generate-api-token).
+
+<img src="docs/images/Configuration_page.png"/>
 
 ### 4. View Traceable AST Report
+
+> **Important:** The Traceable AST report tab will only be visible if the <strong>Traceable AST - Generate Scan Result</strong> build step is added to your Jenkins job.
 
 <ol>
 <li>Build a job, which will run a scan according to the configurations.</li>
@@ -67,7 +74,31 @@ The scan report shows the number of vulnerabilities found for each type of plugi
 <p></p>
 <img src="docs/images/Readme_report.png"/>
 
-<h6>List of Available Configuration Options:</h6>
+---
+
+## Traceable AST Build Steps
+
+Below are the four available Traceable AST build steps. You can add one or more of these to your Jenkins job as needed:
+
+#### 1. Traceable AST - Initialize Scan
+ 
+Initializes a new scan. Use this step if you want to set up scan parameters before running the scan in a separate step. Useful for advanced workflows where scan configuration and execution are decoupled.
+
+#### 2. Traceable AST - Run Scan
+ 
+Executes an AST scan using previously initialized configuration. Use this step after “Initialize Scan” if you have separated scan setup and execution.
+
+#### 3. Traceable AST - Initialize and Run Scan
+  
+Combines initialization and execution into a single step. Use this for most standard use cases where you want to configure and run the scan in one go.
+
+#### 4. Traceable AST - Generate Scan Result
+
+Fetches and displays the results of the completed scan in Jenkins. Add this step to your job if you want the <strong>Traceable AST report</strong> tab to appear after a scan completes.  
+**Note:** This step will block the Jenkins job until the scan completes or times out.
+---
+
+## List of Available Configuration Options
 
 <table>
 <tr>
@@ -79,12 +110,12 @@ The scan report shows the number of vulnerabilities found for each type of plugi
 <td>The name of the scan used to identify the scan</td>
 </tr>
 <tr>
-<td><span style="color:Orange">Test Environment</span> (Required)</td>
+<td><span style="color:Orange">Test Environment</span> (optional)</td>
 <td>The environment from which we should analyze the traffic and generate tests. In most of the cases this will be the environment where functional test traffic is coming</td>
 </tr>
 <tr>
-<td><span style="color:Orange">Client Token</span> (Required)</td>
-<td>Client Token/Scan Token is the token you get from the traceable API testing section while generating a new scan</td>
+<td><span style="color:Orange">API Token</span> (Required)</td>
+<td>API Token/Scan Token is the token you get from the Traceable Testing section while generating a new scan</td>
 </tr>
 <tr>
 <td><span style="color:Orange">Traceable CLI Binary Location</span> (optional)</td>
@@ -189,12 +220,3 @@ Source code and pom file formatting is maintained by the `spotless` maven plugin
 Before submitting a pull request, confirm the formatting is correct with:
 
 * `mvn spotless:apply`
-
-
-
-
-
-
-
-
-
