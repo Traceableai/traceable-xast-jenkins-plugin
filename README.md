@@ -96,6 +96,7 @@ Combines initialization and execution into a single step. Use this for most stan
 
 Fetches and displays the results of the completed scan in Jenkins. Add this step to your job if you want the <strong>Traceable AST report</strong> tab to appear after a scan completes.  
 **Note:** This step will block the Jenkins job until the scan completes or times out.
+
 ---
 
 ## List of Available Configuration Options
