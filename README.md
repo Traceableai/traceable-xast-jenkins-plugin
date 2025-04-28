@@ -93,9 +93,9 @@ Executes an AST scan using previously initialized configuration. Use this step a
 Combines initialization and execution into a single step. Use this for most standard use cases where you want to configure and run the scan in one go.
 
 #### 4. Traceable AST - Generate Scan Result
+> **Note:** This step will block the Jenkins job until the scan completes or times out.
 
 Fetches and displays the results of the completed scan in Jenkins. Add this step to your job if you want the <strong>Traceable AST report</strong> tab to appear after a scan completes.  
-**Note:** This step will block the Jenkins job until the scan completes or times out.
 
 ---
 
