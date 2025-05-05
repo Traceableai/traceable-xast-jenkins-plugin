@@ -38,7 +38,7 @@ To get your API token go to [https://app.traceable.ai/preferences/api-tokens](ht
 <li>Click on <strong>Generate API Token</strong>.</li>
 <img src="docs/images/Generate_New_Token.png"/>
 <li>In the dialog-box that appears, type in the name of the token and click on the <strong>Generate</strong> button.</li>
-<img src="docs/images/Generate_Token_Dialog.png"/>
+<img src="docs/images/Generate_Token_Dialog.png" width="300" height="349"/>
 <li>Copy the generated API token to be used in the next step.</li>
 
 </ol>
