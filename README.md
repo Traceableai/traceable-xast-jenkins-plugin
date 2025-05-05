@@ -33,14 +33,14 @@ This Jenkins plugin for AST allows to run AST scan as a job on local jenkins ins
 
 ### 2. Generate API Token
 
-To get your API token go to [app.traceable.ai](https://app.traceable.ai/) and login to the Traceable dashboard.
+To get your API token go to [https://app.traceable.ai/preferences/api-tokens](https://app.traceable.ai/preferences/api-tokens) and login to your Traceable account.
 <ol>
-<li>Go to the <strong>Testing</strong> tab.</li>
-<li>Select the Suite you want to run the scan for.</li>
-<li>Click on the <strong>Start Scan</strong> button on the top right corner.</li>
-<img src="docs/images/AST_Scan_Suite.png"/>
-<li>In the <strong>Start New Scan</strong> window, click on <strong>Generate New Token</strong> button to generate a new API token.</li>
+<li>Click on <strong>Generate API Token</strong>.</li>
 <img src="docs/images/Generate_New_Token.png"/>
+<li>In the dialog-box that appears, type in the name of the token and click on the <strong>Generate</strong> button.</li>
+<img src="docs/images/Generate_Token_Dialog.png"/>
+<li>Copy the generated API token to be used in the next step.</li>
+
 </ol>
 
 For more detailed instructions to configure a scan and generate API tokens, see [API Token Generation Guide](https://docs.traceable.ai/docs/suites#creating-a-suite-or-quick-scan).
