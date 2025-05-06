@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    Traceable Jenkins Plugin that allows to configure and run AST scans.
+    Traceable Jenkins Plugin for executing API Security Testing (AST) scans within your Jenkins pipelines.
 </div>
